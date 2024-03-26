@@ -1,0 +1,21 @@
+{
+  "version": "1.4",
+  "toolchainPath": "/home/carlo/.mcuxpressotools/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi",
+  "linkedProjects": [],
+  "trustZoneType": "none",
+  "multicoreType": "none",
+  "debug": {
+    "linkserver": {},
+    "pemicro": {},
+    "segger": {}
+  },
+  "projectType": "sdk-freestanding",
+  "sdk": {
+    "version": "2.15.0",
+    "path": "/home/carlo/work/nxp/remote/vs",
+    "boardId": "evkmimxrt685",
+    "deviceId": "MIMXRT685S",
+    "coreId": "cm33_MIMXRT685S",
+    "manifestId": "SDK_2.x_EVK-MIMXRT685_manifest_v3_14"
+  }
+}
