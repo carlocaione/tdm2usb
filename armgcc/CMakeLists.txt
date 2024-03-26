@@ -36,11 +36,11 @@ SET(EXECUTABLE_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 SET(LIBRARY_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 
 
-project(hello_world)
+project(tdm2usb_bm)
 
 set(MCUX_BUILD_TYPES debug release flash_debug flash_release)
 
-set(MCUX_SDK_PROJECT_NAME hello_world.elf)
+set(MCUX_SDK_PROJECT_NAME tdm2usb_bm.elf)
 
 if (NOT DEFINED SdkRootDirPath)
     SET(SdkRootDirPath ${SdkRootDirPath})
@@ -51,7 +51,7 @@ include(${ProjDirPath}/flags.cmake)
 include(${ProjDirPath}/config.cmake)
 
 add_executable(${MCUX_SDK_PROJECT_NAME} 
-"${ProjDirPath}/../hello_world.c"
+"${ProjDirPath}/../tdm2usb_bm.c"
 "${ProjDirPath}/../pin_mux.c"
 "${ProjDirPath}/../pin_mux.h"
 "${SdkRootDirPath}/core/boards/evkmimxrt685/board.c"
