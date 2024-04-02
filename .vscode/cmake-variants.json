@@ -1,0 +1,23 @@
+{
+  "build_type": {
+    "default": "debug",
+    "choices": {
+      "flash_release": {
+        "short": "flash_release",
+        "buildType": "flash_release"
+      },
+      "release": {
+        "short": "release",
+        "buildType": "release"
+      },
+      "flash_debug": {
+        "short": "flash_debug",
+        "buildType": "flash_debug"
+      },
+      "debug": {
+        "short": "debug",
+        "buildType": "debug"
+      }
+    }
+  }
+}
