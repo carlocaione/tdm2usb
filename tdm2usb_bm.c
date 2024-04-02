@@ -22,6 +22,7 @@
 #define I2S_RX (I2S5)
 #define I2S_RX_DATA_LEN (24U)
 #define I2S_RX_FRAME_LEN (32U)
+#define I2S_BUFFER_SIZE (600)
 
 #define DMA_RX (DMA0)
 #define DMA_RX_CHANNEL (10)
@@ -34,21 +35,31 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static uint8_t s_Buffer[600] __attribute__((aligned(4)));
+SDK_ALIGN(static uint8_t s_Buffer[2][I2S_BUFFER_SIZE], sizeof(uint32_t));
+SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors[2U], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
 
-static i2s_transfer_t s_RxTransfer;
 static i2s_config_t s_RxConfig;
 static i2s_dma_handle_t s_RxHandle;
 
 static dma_handle_t s_DmaRxHandle;
+
+static i2s_transfer_t s_rxTransfer[2] = {
+    {
+        .data = s_Buffer[0],
+        .dataSize = I2S_BUFFER_SIZE,
+    },
+    {
+        .data = s_Buffer[1],
+        .dataSize = I2S_BUFFER_SIZE,
+    },
+};
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 static void RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
 {
-    i2s_transfer_t *transfer = (i2s_transfer_t *)userData;
-    I2S_RxTransferReceiveDMA(base, handle, *transfer);
+    __NOP();
 }
 
 /*!
@@ -91,13 +102,13 @@ void I2S_DMA_Setup(void)
     DMA_SetChannelPriority(DMA_RX, DMA_RX_CHANNEL, DMA_RX_CHANNEL_PRIO);
     DMA_CreateHandle(&s_DmaRxHandle, DMA_RX, DMA_RX_CHANNEL);
 
-    s_RxTransfer.data = &s_Buffer[0];
-    s_RxTransfer.dataSize = sizeof(s_Buffer);
+    I2S_RxTransferCreateHandleDMA(I2S_RX, &s_RxHandle, &s_DmaRxHandle, RxCallback, (void *)&s_rxTransfer);
+    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle, s_rxDmaDescriptors, 2U);
 
-    I2S_RxTransferCreateHandleDMA(I2S_RX, &s_RxHandle, &s_DmaRxHandle, RxCallback, (void *)&s_RxTransfer);
-
-    I2S_RxTransferReceiveDMA(I2S_RX, &s_RxHandle, s_RxTransfer);
-    I2S_RxTransferReceiveDMA(I2S_RX, &s_RxHandle, s_RxTransfer);
+    if (I2S_TransferReceiveLoopDMA(I2S_RX, &s_RxHandle, &s_rxTransfer[0], 2U) != kStatus_Success)
+    {
+        assert(false);
+    }
 }
 
 /*!
