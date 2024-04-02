@@ -18,7 +18,7 @@
 #include "usb_device_ch9.h"
 #include "usb_device_descriptor.h"
 
-#include "audio_generator.h"
+#include "tdm2usb.h"
 
 #include "fsl_device_registers.h"
 #include "fsl_debug_console.h"

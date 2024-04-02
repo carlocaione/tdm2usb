@@ -14,7 +14,7 @@
 #include "usb_device_audio.h"
 #include "usb_audio_config.h"
 #include "usb_device_descriptor.h"
-#include "audio_generator.h"
+#include "tdm2usb.h"
 
 /*******************************************************************************
  * Definitions

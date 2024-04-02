@@ -36,11 +36,11 @@ SET(EXECUTABLE_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 SET(LIBRARY_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 
 
-project(dev_audio_generator_freertos)
+project(tdm2usb)
 
 set(MCUX_BUILD_TYPES flash_release release flash_debug debug)
 
-set(MCUX_SDK_PROJECT_NAME dev_audio_generator_freertos.elf)
+set(MCUX_SDK_PROJECT_NAME tdm2usb.elf)
 
 if (NOT DEFINED SdkRootDirPath)
     SET(SdkRootDirPath ${SdkRootDirPath})
@@ -59,8 +59,8 @@ add_executable(${MCUX_SDK_PROJECT_NAME}
 "${ProjDirPath}/../board.h"
 "${ProjDirPath}/../clock_config.c"
 "${ProjDirPath}/../clock_config.h"
-"${ProjDirPath}/../audio_generator.c"
-"${ProjDirPath}/../audio_generator.h"
+"${ProjDirPath}/../tdm2usb.c"
+"${ProjDirPath}/../tdm2usb.h"
 "${ProjDirPath}/../usb_device_descriptor.c"
 "${ProjDirPath}/../usb_device_descriptor.h"
 "${ProjDirPath}/../usb_device_config.h"
