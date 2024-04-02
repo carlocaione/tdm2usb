@@ -11,7 +11,7 @@
  * Definitions
  ******************************************************************************/
 /*${macro:start}*/
-#define AUDIO_DATA_SOURCE_DMIC 1
+#define AUDIO_DATA_SOURCE_I2S 1
 /*${macro:end}*/
 
 #endif /* _USB_AUDIO_CONFIG_H_ */

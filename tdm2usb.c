@@ -54,8 +54,8 @@ void USB_DeviceTaskFn(void *deviceHandle);
 usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void *param);
 usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *param);
 extern void USB_AudioRecorderGetBuffer(uint8_t *buffer, uint32_t size);
-#if defined(AUDIO_DATA_SOURCE_DMIC) && (AUDIO_DATA_SOURCE_DMIC > 0U)
-extern void Board_DMIC_DMA_Init(void);
+#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
+extern void Board_I2S_DMA_Init(void);
 #endif
 #if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
 extern void SCTIMER_CaptureInit(void);
@@ -113,9 +113,9 @@ usb_audio_generator_struct_t s_audioGenerator = {
     0U,             /* curMute20 */
     1U,             /* curClockValid */
     {0x00U, 0x1FU}, /* curVolume20 */
-#if defined(AUDIO_DATA_SOURCE_DMIC) && (AUDIO_DATA_SOURCE_DMIC > 0U)
-    16000U,                   /* curSampleFrequency, This should be changed to 16000 if sampling rate is 16k */
-    {1U, 16000U, 16000U, 0U}, /* freqControlRange */
+#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
+    48000U,                   /* curSampleFrequency, This should be changed to 16000 if sampling rate is 16k */
+    {1U, 48000U, 48000U, 0U}, /* freqControlRange */
 #else
     8000U,                  /* curSampleFrequency, This should be changed to 8000 if sampling rate is 8k */
     {1U, 8000U, 8000U, 0U}, /* freqControlRange */
@@ -998,8 +998,8 @@ void main(void)
     s_audioGenerator.curAudioPllFrac = CLKCTL1->AUDIOPLL0NUM;
 #endif
 
-#if defined(AUDIO_DATA_SOURCE_DMIC) && (AUDIO_DATA_SOURCE_DMIC > 0U)
-    Board_DMIC_DMA_Init();
+#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
+    Board_I2S_DMA_Init();
 #endif
 
     if (xTaskCreate(APPTask,                                /* pointer to the task */

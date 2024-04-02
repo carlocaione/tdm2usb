@@ -6,17 +6,19 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef __AUDIO_DATA_DMIC_H__
-#define __AUDIO_DATA_DMIC_H__ 1
+#ifndef __AUDIO_DATA_I2S_H__
+#define __AUDIO_DATA_I2S_H__ 1
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-#define DEMO_DMA                 DMA0
-#define DEMO_DMIC_RX_CHANNEL     16
-#define DEMO_DMIC_CHANNEL        kDMIC_Channel0
-#define DEMO_DMIC_CHANNEL_ENABLE DMIC_CHANEN_EN_CH0(1)
-#define DEMO_DMIC_OSR            (24U)
+#define I2S_RX                  (I2S5)
+#define I2S_RX_DATA_LEN         (24U)
+#define I2S_RX_FRAME_LEN        (32U)
 
-#endif /* __AUDIO_DATA_DMIC_H__ */
+#define DMA_RX                  (DMA0)
+#define DMA_RX_CHANNEL          (10)
+#define DMA_RX_CHANNEL_PRIO     (kDMA_ChannelPriority2)
+
+#endif /* __AUDIO_DATA_I2S_H__ */
