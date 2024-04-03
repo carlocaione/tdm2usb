@@ -23,6 +23,7 @@
 #define I2S_RX_DATA_LEN (24U)
 #define I2S_RX_FRAME_LEN (32U)
 #define I2S_BUFFER_SIZE (600)
+#define I2S_BUFFER_NUM (2U)
 
 #define DMA_RX (DMA0)
 #define DMA_RX_CHANNEL (10)
@@ -35,7 +36,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-SDK_ALIGN(static uint8_t s_Buffer[2][I2S_BUFFER_SIZE], sizeof(uint32_t));
+SDK_ALIGN(static uint8_t s_Buffer[I2S_BUFFER_SIZE * I2S_BUFFER_NUM], sizeof(uint32_t));
 SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors[2U], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
 
 static i2s_config_t s_RxConfig;
@@ -45,11 +46,11 @@ static dma_handle_t s_DmaRxHandle;
 
 static i2s_transfer_t s_rxTransfer[2] = {
     {
-        .data = s_Buffer[0],
+        .data = s_Buffer,
         .dataSize = I2S_BUFFER_SIZE,
     },
     {
-        .data = s_Buffer[1],
+        .data = &s_Buffer[I2S_BUFFER_SIZE],
         .dataSize = I2S_BUFFER_SIZE,
     },
 };
