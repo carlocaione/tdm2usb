@@ -71,9 +71,9 @@
 #endif
 
 /* Audio data format */
-#define AUDIO_FORMAT_CHANNELS (0x0AU)
+#define AUDIO_FORMAT_CHANNELS (0x10U)
 #if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
-#define AUDIO_FORMAT_BITS (24U)
+#define AUDIO_FORMAT_BITS (32U)
 #define AUDIO_FORMAT_SIZE (0x04U)
 #else
 #define AUDIO_FORMAT_BITS (8U)

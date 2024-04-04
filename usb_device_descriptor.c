@@ -178,12 +178,12 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_DESCRIPTOR_LENGTH_CONFIGURE, /* Size of this descriptor in bytes */
     USB_DESCRIPTOR_TYPE_CONFIGURE,   /* CONFIGURATION Descriptor Type */
     USB_SHORT_GET_LOW(USB_DESCRIPTOR_LENGTH_CONFIGURE + 0x08U + USB_DESCRIPTOR_LENGTH_INTERFACE +
-                      USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + 0x08U + 0x11U + 0x0EU + 0x0CU +
+                      USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + 0x08U + 0x11U + 0x4AU + 0x0CU +
                       USB_DESCRIPTOR_LENGTH_INTERFACE + USB_DESCRIPTOR_LENGTH_INTERFACE + 0x10U + 0x06U +
                       USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH + USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH),
     USB_SHORT_GET_HIGH(
         USB_DESCRIPTOR_LENGTH_CONFIGURE + 0x08U + USB_DESCRIPTOR_LENGTH_INTERFACE +
-        USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + 0x08U + 0x11U + 0x0EU + 0x0CU + USB_DESCRIPTOR_LENGTH_INTERFACE +
+        USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + 0x08U + 0x11U + 0x4AU + 0x0CU + USB_DESCRIPTOR_LENGTH_INTERFACE +
         USB_DESCRIPTOR_LENGTH_INTERFACE + 0x10U + 0x06U + USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH +
         USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH), /* Total length of data returned for this configuration. */
     USB_AUDIO_GENERATOR_INTERFACE_COUNT,           /* Number of interfaces supported by this configuration */
@@ -231,7 +231,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x00U,
     0x02U, /* Audio Device compliant to the USB Audio specification version 2.00  */
     0x03U, /* MICROPHONE(0x03) : Indicating the primary use of this audio function   */
-    0x3CU,
+    0x78U,
     0x00U, /* Total number of bytes returned for the class-specific AudioControl interface descriptor. Includes
               the combined length of this descriptor header and all Unit and Terminal descriptors.   */
     0x00U, /* D1..0: Latency Control  */
@@ -260,9 +260,9 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x00U, /* This Input Terminal has no association   */
     USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Input Terminal is
                                                           connected.  */
-    0x01U, /* This Terminal's output audio channel cluster has 1 logical output channels   */
-    0x01U,
-    0x00U,
+    0x10U, /* This Terminal's output audio channel cluster has 1 logical output channels   */
+    0xFFU,
+    0xFFU,
     0x00U,
     0x00U, /* Describes the spatial location of the logical channels:: Mono, no spatial location */
     0x00U, /* Index of a string descriptor, describing the name of the first logical channel.  */
@@ -276,7 +276,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
               D15..12: Reserved, should set to 0*/
     0x02U, /* Index of a string descriptor, describing the Input Terminal.  */
 
-    0x0EU,                                             /* Size of the descriptor, in bytes  : 6 + (1 + 1) * 4 */
+    0x4AU,                                             /* Size of the descriptor, in bytes  : 6 + (1 + 1) * 4 */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,            /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_FEATURE_UNIT, /* FEATURE_UNIT descriptor subtype   */
     USB_AUDIO_RECORDER_CONTROL_FEATURE_UNIT_ID,   /* Constant uniquely identifying the Unit within the audio function.
@@ -299,7 +299,67 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x00U,
     0x00U,
     0x00U,
+    0x00U, /* The controls bitmap for logical channel 1. */
     0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 2. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 3. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 4. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 5. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 6. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 7. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 8. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 9. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 10. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 11. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 12. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 13. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 14. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 15. */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* The controls bitmap for logical channel 16. */
     0x00U, /* Index of a string descriptor, describing this Feature Unit.   */
 
     0x0CU,                                                /* Size of the descriptor, in bytes   */
@@ -359,8 +419,8 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x00U,
     0x00U,                 /* The Audio Data Format that can be Used to communicate with this interface */
     AUDIO_FORMAT_CHANNELS, /* Number of physical channels in the AS Interface audio channel cluster */
-    0x01U,
-    0x00U,
+    0xFFU,
+    0xFFU,
     0x00U,
     0x00U, /* Describes the spatial location of the logical channels: */
     0x00U, /* Index of a string descriptor, describing the name of the first physical channel   */
@@ -371,7 +431,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_FORMAT_TYPE_I, /* The format type AudioStreaming interfae using is FORMAT_TYPE_I (0x01)   */
 #if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
     0x04U, /* The number of bytes occupied by one audio subslot. Can be 1, 2, 3 or 4.  */
-    0x18U, /* The number of effectively used bits from the available bits in an audio subslot   */
+    0x20U, /* The number of effectively used bits from the available bits in an audio subslot   */
 #else
     0x01U, /* The number of bytes occupied by one audio subslot. Can be 1, 2, 3 or 4.  */
     0x08U, /* The number of effectively used bits from the available bits in an audio subslot   */
