@@ -51,8 +51,8 @@ include(${ProjDirPath}/flags.cmake)
 include(${ProjDirPath}/config.cmake)
 
 add_executable(${MCUX_SDK_PROJECT_NAME} 
-"${ProjDirPath}/../audio_data_dmic.c"
-"${ProjDirPath}/../audio_data_dmic.h"
+"${ProjDirPath}/../audio_data_i2s.c"
+"${ProjDirPath}/../audio_data_i2s.h"
 "${ProjDirPath}/../pin_mux.c"
 "${ProjDirPath}/../pin_mux.h"
 "${ProjDirPath}/../board.c"

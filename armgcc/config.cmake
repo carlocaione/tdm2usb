@@ -5,8 +5,6 @@
 set(CONFIG_COMPILER gcc)
 set(CONFIG_TOOLCHAIN armgcc)
 set(CONFIG_USE_COMPONENT_CONFIGURATION false)
-set(CONFIG_USE_driver_dmic true)
-set(CONFIG_USE_driver_dmic_dma true)
 set(CONFIG_USE_driver_sctimer true)
 set(CONFIG_USE_middleware_usb_device_ip3511hs true)
 set(CONFIG_USE_middleware_usb_phy true)
