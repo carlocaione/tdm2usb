@@ -114,8 +114,8 @@ usb_audio_generator_struct_t s_audioGenerator = {
     1U,             /* curClockValid */
     {0x00U, 0x1FU}, /* curVolume20 */
 #if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
-    16000U,                   /* curSampleFrequency, This should be changed to 16000 if sampling rate is 16k */
-    {1U, 16000U, 16000U, 0U}, /* freqControlRange */
+    48000U,                   /* curSampleFrequency, This should be changed to 48000 if sampling rate is 48k */
+    {1U, 48000U, 48000U, 0U}, /* freqControlRange */
 #else
     8000U,                  /* curSampleFrequency, This should be changed to 8000 if sampling rate is 8k */
     {1U, 8000U, 8000U, 0U}, /* freqControlRange */

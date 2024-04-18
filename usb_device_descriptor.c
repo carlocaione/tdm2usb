@@ -260,8 +260,8 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x00U, /* This Input Terminal has no association   */
     USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Input Terminal is
                                                           connected.  */
-    0x01U, /* This Terminal's output audio channel cluster has 1 logical output channels   */
-    0x01U,
+    0x10U, /* This Terminal's output audio channel cluster has 16 logical output channels   */
+    0x00U,
     0x00U,
     0x00U,
     0x00U, /* Describes the spatial location of the logical channels:: Mono, no spatial location */
@@ -359,7 +359,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x00U,
     0x00U,                 /* The Audio Data Format that can be Used to communicate with this interface */
     AUDIO_FORMAT_CHANNELS, /* Number of physical channels in the AS Interface audio channel cluster */
-    0x01U,
+    0x00U,
     0x00U,
     0x00U,
     0x00U, /* Describes the spatial location of the logical channels: */
@@ -370,8 +370,8 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_DESCRIPTOR_SUBTYPE_AUDIO_STREAMING_FORMAT_TYPE, /* FORMAT_TYPE descriptor subtype   */
     USB_AUDIO_FORMAT_TYPE_I, /* The format type AudioStreaming interfae using is FORMAT_TYPE_I (0x01)   */
 #if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
-    0x02U, /* The number of bytes occupied by one audio subslot. Can be 1, 2, 3 or 4.  */
-    0x10U, /* The number of effectively used bits from the available bits in an audio subslot   */
+    0x04U, /* The number of bytes occupied by one audio subslot. Can be 1, 2, 3 or 4.  */
+    0x20U, /* The number of effectively used bits from the available bits in an audio subslot   */
 #else
     0x01U, /* The number of bytes occupied by one audio subslot. Can be 1, 2, 3 or 4.  */
     0x08U, /* The number of effectively used bits from the available bits in an audio subslot   */
