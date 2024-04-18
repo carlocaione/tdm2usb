@@ -48,3 +48,7 @@ set(CONFIG_DEVICE_ID MIMXRT685S)
 set(CONFIG_FPU SP_FPU)
 set(CONFIG_DSP DSP)
 set(CONFIG_CORE_ID cm33)
+
+# tdm2usb
+set(CONFIG_USE_driver_flexcomm_i2s true)
+set(CONFIG_USE_driver_i2s_bridge true)
