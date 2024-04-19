@@ -52,3 +52,4 @@ set(CONFIG_CORE_ID cm33)
 # tdm2usb
 set(CONFIG_USE_driver_flexcomm_i2s true)
 set(CONFIG_USE_driver_i2s_bridge true)
+set(CONFIG_USE_driver_flexcomm_i2s_dma true)

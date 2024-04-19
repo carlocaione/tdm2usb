@@ -4,5 +4,10 @@
 			"name": "tdm2usb",
 			"path": "."
 		}
-	]
+	],
+	"settings": {
+		"files.associations": {
+			"audio_data_i2s.h": "c"
+		}
+	}
 }
