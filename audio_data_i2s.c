@@ -15,7 +15,9 @@
 #include "fsl_device_registers.h"
 
 #include "fsl_i2s.h"
+#include "fsl_i2s_dma.h"
 #include "fsl_i2s_bridge.h"
+#include "fsl_dma.h"
 
 #include "audio_data_i2s.h"
 
@@ -24,7 +26,9 @@
  ******************************************************************************/
 #define TO_BITS(n) ((n) << 3U)
 
-#define AUDIO_ENDPOINT_MAX_PACKET_SIZE MAX(FS_ISO_IN_ENDP_PACKET_SIZE, HS_ISO_IN_ENDP_PACKET_SIZE)
+#define AUDIO_ENDPOINT_MAX_PACKET_SIZE (HS_ISO_IN_ENDP_PACKET_SIZE)
+
+#define I2S_BUFF_NUM (2)
 #define I2S_BUFF_SIZE (AUDIO_ENDPOINT_MAX_PACKET_SIZE * 4)
 
 #define CH_NUM (16) /** Channels number [16] */
@@ -44,16 +48,45 @@
  * Variables
  ******************************************************************************/
 USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuff[AUDIO_ENDPOINT_MAX_PACKET_SIZE];
-SDK_ALIGN(static uint8_t s_i2sBuff[I2S_BUFF_SIZE], sizeof(uint32_t));
 
-static i2s_transfer_t s_RxTransfer_0_7;
-static i2s_transfer_t s_RxTransfer_8_15;
+SDK_ALIGN(static uint8_t s_i2sBuff_0_7[I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
+SDK_ALIGN(static uint8_t s_i2sBuff_8_15[I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
 
-static i2s_handle_t s_RxHandle_0_7;
-static i2s_handle_t s_RxHandle_8_15;
+SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors_0_7[2U], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
+SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors_8_15[2U], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
 
-static uint32_t s_audioPosition = 0U;
+static i2s_dma_handle_t s_RxHandle_0_7;
+static i2s_dma_handle_t s_RxHandle_8_15;
+
+static dma_handle_t s_DmaRxHandle_0_7;
+static dma_handle_t s_DmaRxHandle_8_15;
+
+static uint32_t s_audioPosition_0_7 = 0U;
+static uint32_t s_audioPosition_8_15 = 0U;
+
 volatile unsigned int first_int = 0;
+
+static i2s_transfer_t s_rxTransfer_0_7[2] = {
+    {
+        .data = &s_i2sBuff_0_7[0],
+        .dataSize = I2S_BUFF_SIZE,
+    },
+    {
+        .data = &s_i2sBuff_0_7[I2S_BUFF_SIZE],
+        .dataSize = I2S_BUFF_SIZE,
+    }
+};
+
+static i2s_transfer_t s_rxTransfer_8_15[2] = {
+    {
+        .data = &s_i2sBuff_8_15[0],
+        .dataSize = I2S_BUFF_SIZE,
+    },
+    {
+        .data = &s_i2sBuff_8_15[I2S_BUFF_SIZE],
+        .dataSize = I2S_BUFF_SIZE,
+    }
+};
 
 /*******************************************************************************
  * Code
@@ -65,33 +98,53 @@ volatile unsigned int first_int = 0;
  */
 void USB_AudioRecorderGetBuffer(uint8_t *buffer, uint32_t size)
 {
-    uint32_t k;
+    uint32_t k = 0U;
 
-    for (k = 0U; k < size; k++)
+    while (k < size)
     {
-        if (s_audioPosition > I2S_BUFF_SIZE)
+        for (size_t j = 0U; j < FRAME_LEN_PER_INST; j++)
         {
-            s_audioPosition = 0U;
+            if (s_audioPosition_0_7 == (I2S_BUFF_SIZE * I2S_BUFF_NUM))
+            {
+                s_audioPosition_0_7 = 0U;
+            }
+
+            if ((j % 4) != 0) {
+                *(buffer + k) = s_i2sBuff_0_7[s_audioPosition_0_7];
+            } else {
+                *(buffer + k) = 0x00;
+            }
+            s_audioPosition_0_7++;
+            k++;
         }
 
-        *(buffer + k) = s_i2sBuff[s_audioPosition];
-        s_audioPosition++;
+        for (size_t j = 0U; j < FRAME_LEN_PER_INST; j++)
+        {
+            if (s_audioPosition_8_15 == (I2S_BUFF_SIZE * I2S_BUFF_NUM))
+            {
+                s_audioPosition_8_15 = 0U;
+            }
+
+            if ((j % 4) != 0) {
+                *(buffer + k) = s_i2sBuff_8_15[s_audioPosition_8_15];
+            } else {
+                *(buffer + k) = 0x00;
+            }
+            s_audioPosition_8_15++;
+            k++;
+        }
     }
 }
 
-static void RxCallback(I2S_Type *base, i2s_handle_t *handle, status_t completionStatus, void *userData)
+static void RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
 {
-    i2s_transfer_t *transfer = (i2s_transfer_t *)userData;
-
     if (first_int == 0U)
     {
-        s_audioPosition = 0U;
+        s_audioPosition_0_7 = 0U;
+        s_audioPosition_8_15 = 0U;
+
         first_int = 1U;
     }
-
-    transfer->data = &s_i2sBuff[((transfer->data + FRAME_LEN) - s_i2sBuff) % I2S_BUFF_SIZE];
-
-    I2S_RxTransferNonBlocking(base, handle, *transfer);
 }
 
 void Board_I2S_Init(void)
@@ -105,6 +158,15 @@ void Board_I2S_Init(void)
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_ShareSet0);
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_ShareSet0);
+
+    DMA_Init(DMA_RX);
+    DMA_EnableChannel(DMA_RX, DMA_RX_CH_0_7);
+    DMA_SetChannelPriority(DMA_RX, DMA_RX_CH_0_7, DMA_RX_CH_PRIO_0_7);
+    DMA_CreateHandle(&s_DmaRxHandle_0_7, DMA_RX, DMA_RX_CH_0_7);
+
+    DMA_EnableChannel(DMA_RX, DMA_RX_CH_8_15);
+    DMA_SetChannelPriority(DMA_RX, DMA_RX_CH_8_15, DMA_RX_CH_PRIO_8_15);
+    DMA_CreateHandle(&s_DmaRxHandle_8_15, DMA_RX, DMA_RX_CH_8_15);
 
     /**
      * Default values:
@@ -136,10 +198,8 @@ void Board_I2S_Init(void)
     I2S_EnableSecondaryChannel(I2S_RX_0_7, kI2S_SecondaryChannel2, false, CH_POS(0, 2));
     I2S_EnableSecondaryChannel(I2S_RX_0_7, kI2S_SecondaryChannel3, false, CH_POS(0, 3));
 
-    s_RxTransfer_0_7.data = &s_i2sBuff[0];
-    s_RxTransfer_0_7.dataSize = FRAME_LEN_PER_INST;
-
-    I2S_RxTransferCreateHandle(I2S_RX_0_7, &s_RxHandle_0_7, RxCallback, (void *)&s_RxTransfer_0_7);
+    I2S_RxTransferCreateHandleDMA(I2S_RX_0_7, &s_RxHandle_0_7, &s_DmaRxHandle_0_7, RxCallback, (void *)&s_rxTransfer_0_7);
+    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle_0_7, s_rxDmaDescriptors_0_7, 2U);
 
     s_RxConfig.position = TO_BITS(FRAME_LEN_PER_INST);
 
@@ -148,11 +208,16 @@ void Board_I2S_Init(void)
     I2S_EnableSecondaryChannel(I2S_RX_8_15, kI2S_SecondaryChannel2, false, CH_POS(FRAME_LEN_PER_INST, 2));
     I2S_EnableSecondaryChannel(I2S_RX_8_15, kI2S_SecondaryChannel3, false, CH_POS(FRAME_LEN_PER_INST, 3));
 
-    s_RxTransfer_8_15.data = &s_i2sBuff[FRAME_LEN_PER_INST];
-    s_RxTransfer_8_15.dataSize = FRAME_LEN_PER_INST;
+    I2S_RxTransferCreateHandleDMA(I2S_RX_8_15, &s_RxHandle_8_15, &s_DmaRxHandle_8_15, RxCallback, (void *)&s_rxTransfer_8_15);
+    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle_8_15, s_rxDmaDescriptors_8_15, 2U);
 
-    I2S_RxTransferCreateHandle(I2S_RX_8_15, &s_RxHandle_8_15, RxCallback, (void *)&s_RxTransfer_8_15);
+    if (I2S_TransferReceiveLoopDMA(I2S_RX_0_7, &s_RxHandle_0_7, &s_rxTransfer_0_7[0], 2U) != kStatus_Success)
+    {
+        assert(false);
+    }
 
-    I2S_RxTransferNonBlocking(I2S_RX_0_7, &s_RxHandle_0_7, s_RxTransfer_0_7);
-    I2S_RxTransferNonBlocking(I2S_RX_8_15, &s_RxHandle_8_15, s_RxTransfer_8_15);
+    if (I2S_TransferReceiveLoopDMA(I2S_RX_8_15, &s_RxHandle_8_15, &s_rxTransfer_8_15[0], 2U) != kStatus_Success)
+    {
+        assert(false);
+    }
 }
