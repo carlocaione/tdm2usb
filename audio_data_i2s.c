@@ -24,68 +24,128 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+/**
+ * Silly macro for byte -> bits conversion.
+ */
 #define TO_BITS(n) ((n) << 3U)
 
+/**
+ * USB max packet size. We default to High-Speed [384 bytes]
+ */
 #define AUDIO_ENDPOINT_MAX_PACKET_SIZE (HS_ISO_IN_ENDP_PACKET_SIZE)
 
-#define I2S_BUFF_NUM (2)
-#define I2S_BUFF_SIZE (AUDIO_ENDPOINT_MAX_PACKET_SIZE * 4)
+/**
+ * Number of I2S instances. Each I2S instance (controller) supports at maximum 8
+ * channels, so we need 2 instances [2 instances]
+ */
+#define I2S_INST_NUM (2U)
 
-#define CH_NUM (16) /** Channels number [16] */
-#define CH_NUM_PER_PAIR (2) /** Channels number per I2S pair (L/R) [2] */
-#define CH_LEN_DATA (4) /** Bytes per channel [4 bytes] */
-#define INST_NUM (2) /** Number of I2S instances [2] */
+/**
+ * Indexes for I2S instances.
+ */
+#define I2S_CH_0_7 (0U)
+#define I2S_CH_8_15 (1U)
 
-#define CH_NUM_PER_INST (CH_NUM / INST_NUM) /** Channels number per I2S instance [8] */
-#define CH_LEN_PER_PAIR (CH_LEN_DATA * CH_NUM_PER_PAIR) /** Bytes per I2S pair [8 bytes] */
+/**
+ * Number of buffers for I2S DMA ping-pong [2]
+ */
+#define I2S_BUFF_NUM (2U)
 
-#define FRAME_LEN (CH_NUM * CH_LEN_DATA) /** Bytes in an audio frame [64 bytes] */
-#define FRAME_LEN_PER_INST (CH_NUM_PER_INST * CH_LEN_DATA) /** Bytes of the frame managed by an I2S instance [32 bytes] */
+/**
+ * Buffer size for each I2S DMA buffer. We use 4 times the size of the USB packet [1536 bytes]
+ */
+#define I2S_BUFF_SIZE (AUDIO_ENDPOINT_MAX_PACKET_SIZE * 4U)
 
-#define CH_POS(off, n) (TO_BITS(off) + (TO_BITS(CH_LEN_PER_PAIR) * (n)))
+/**
+ * Number of total channels [16 channels]
+ */
+#define I2S_CH_NUM (16U)
+
+/**
+ * Number of channels per I2S pair (L/R) [2 channels]
+ */
+#define I2S_CH_NUM_PER_PAIR (2U)
+
+/**
+ * Data bytes per channels [4 bytes / 32 bits]
+ */
+#define I2S_CH_LEN_DATA (4U)
+
+/**
+ *  Number of channels per I2S instance [8 channels]
+ */
+#define I2S_CH_NUM_PER_INST (I2S_CH_NUM / I2S_INST_NUM)
+
+/**
+ * Data bytes per I2S pair [8 bytes]
+ */
+#define I2S_CH_LEN_PER_PAIR (I2S_CH_LEN_DATA * I2S_CH_NUM_PER_PAIR)
+
+/**
+ * Total frame length [64 bytes]
+ */
+#define I2S_FRAME_LEN (I2S_CH_NUM * I2S_CH_LEN_DATA)
+
+/**
+ * Frame length per I2S instance [32 bytes]
+ */
+#define I2S_FRAME_LEN_PER_INST (I2S_CH_NUM_PER_INST * I2S_CH_LEN_DATA)
+
+/**
+ * Helper macro to set the offset for the secondary channels.
+ */
+#define CH_POS(off, n) (TO_BITS(off) + (TO_BITS(I2S_CH_LEN_PER_PAIR) * (n)))
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
+static I2S_Type *i2s[] = {
+    I2S5,
+    I2S4,
+};
+
+static uint32_t i2s_dma_channel[] = {
+    10, /** Flexcomm5 */
+    8,  /** Flexcomm4 */
+};
+
+static dma_priority_t i2s_dma_prio[] = {
+    kDMA_ChannelPriority2,
+    kDMA_ChannelPriority2,
+};
+
 USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuff[AUDIO_ENDPOINT_MAX_PACKET_SIZE];
 
-SDK_ALIGN(static uint8_t s_i2sBuff_0_7[I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
-SDK_ALIGN(static uint8_t s_i2sBuff_8_15[I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
+SDK_ALIGN(static uint8_t s_i2sBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
+SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors[I2S_INST_NUM][I2S_BUFF_NUM], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
 
-SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors_0_7[2U], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
-SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors_8_15[2U], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
-
-static i2s_dma_handle_t s_RxHandle_0_7;
-static i2s_dma_handle_t s_RxHandle_8_15;
-
-static dma_handle_t s_DmaRxHandle_0_7;
-static dma_handle_t s_DmaRxHandle_8_15;
-
-static uint32_t s_audioPosition_0_7 = 0U;
-static uint32_t s_audioPosition_8_15 = 0U;
+static i2s_dma_handle_t s_RxHandle[I2S_INST_NUM];
+static dma_handle_t s_DmaRxHandle[I2S_INST_NUM];
+static uint32_t s_audioPosition[I2S_INST_NUM] = { 0 };
 
 volatile unsigned int first_int = 0;
 
-static i2s_transfer_t s_rxTransfer_0_7[2] = {
+static i2s_transfer_t s_rxTransfer[I2S_INST_NUM][I2S_BUFF_NUM] = {
     {
-        .data = &s_i2sBuff_0_7[0],
-        .dataSize = I2S_BUFF_SIZE,
+        {
+            .data = &s_i2sBuff[I2S_CH_0_7][0],
+            .dataSize = I2S_BUFF_SIZE,
+        },
+        {
+            .data = &s_i2sBuff[I2S_CH_0_7][I2S_BUFF_SIZE],
+            .dataSize = I2S_BUFF_SIZE,
+        }, 
     },
     {
-        .data = &s_i2sBuff_0_7[I2S_BUFF_SIZE],
-        .dataSize = I2S_BUFF_SIZE,
-    }
-};
-
-static i2s_transfer_t s_rxTransfer_8_15[2] = {
-    {
-        .data = &s_i2sBuff_8_15[0],
-        .dataSize = I2S_BUFF_SIZE,
+        {
+            .data = &s_i2sBuff[I2S_CH_8_15][0],
+            .dataSize = I2S_BUFF_SIZE,
+        },
+        {
+            .data = &s_i2sBuff[I2S_CH_8_15][I2S_BUFF_SIZE],
+            .dataSize = I2S_BUFF_SIZE,
+        }, 
     },
-    {
-        .data = &s_i2sBuff_8_15[I2S_BUFF_SIZE],
-        .dataSize = I2S_BUFF_SIZE,
-    }
 };
 
 /*******************************************************************************
@@ -102,35 +162,35 @@ void USB_AudioRecorderGetBuffer(uint8_t *buffer, uint32_t size)
 
     while (k < size)
     {
-        for (size_t j = 0U; j < FRAME_LEN_PER_INST; j++)
+        for (size_t j = 0U; j < I2S_FRAME_LEN_PER_INST; j++)
         {
-            if (s_audioPosition_0_7 == (I2S_BUFF_SIZE * I2S_BUFF_NUM))
+            if (s_audioPosition[I2S_CH_0_7] == (I2S_BUFF_SIZE * I2S_BUFF_NUM))
             {
-                s_audioPosition_0_7 = 0U;
+                s_audioPosition[I2S_CH_0_7] = 0U;
             }
 
             if ((j % 4) != 0) {
-                *(buffer + k) = s_i2sBuff_0_7[s_audioPosition_0_7];
+                *(buffer + k) = s_i2sBuff[I2S_CH_0_7][s_audioPosition[I2S_CH_0_7]];
             } else {
                 *(buffer + k) = 0x00;
             }
-            s_audioPosition_0_7++;
+            s_audioPosition[I2S_CH_0_7]++;
             k++;
         }
 
-        for (size_t j = 0U; j < FRAME_LEN_PER_INST; j++)
+        for (size_t j = 0U; j < I2S_FRAME_LEN_PER_INST; j++)
         {
-            if (s_audioPosition_8_15 == (I2S_BUFF_SIZE * I2S_BUFF_NUM))
+            if (s_audioPosition[I2S_CH_8_15] == (I2S_BUFF_SIZE * I2S_BUFF_NUM))
             {
-                s_audioPosition_8_15 = 0U;
+                s_audioPosition[I2S_CH_8_15] = 0U;
             }
 
             if ((j % 4) != 0) {
-                *(buffer + k) = s_i2sBuff_8_15[s_audioPosition_8_15];
+                *(buffer + k) = s_i2sBuff[I2S_CH_8_15][s_audioPosition[I2S_CH_8_15]];
             } else {
                 *(buffer + k) = 0x00;
             }
-            s_audioPosition_8_15++;
+            s_audioPosition[I2S_CH_8_15]++;
             k++;
         }
     }
@@ -140,8 +200,8 @@ static void RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t comple
 {
     if (first_int == 0U)
     {
-        s_audioPosition_0_7 = 0U;
-        s_audioPosition_8_15 = 0U;
+        s_audioPosition[I2S_CH_0_7] = 0U;
+        s_audioPosition[I2S_CH_8_15] = 0U;
 
         first_int = 1U;
     }
@@ -160,13 +220,13 @@ void Board_I2S_Init(void)
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_ShareSet0);
 
     DMA_Init(DMA_RX);
-    DMA_EnableChannel(DMA_RX, DMA_RX_CH_0_7);
-    DMA_SetChannelPriority(DMA_RX, DMA_RX_CH_0_7, DMA_RX_CH_PRIO_0_7);
-    DMA_CreateHandle(&s_DmaRxHandle_0_7, DMA_RX, DMA_RX_CH_0_7);
+    DMA_EnableChannel(DMA_RX, i2s_dma_channel[I2S_CH_0_7]);
+    DMA_SetChannelPriority(DMA_RX, i2s_dma_channel[I2S_CH_0_7], i2s_dma_prio[I2S_CH_0_7]);
+    DMA_CreateHandle(&s_DmaRxHandle[I2S_CH_0_7], DMA_RX, i2s_dma_channel[I2S_CH_0_7]);
 
-    DMA_EnableChannel(DMA_RX, DMA_RX_CH_8_15);
-    DMA_SetChannelPriority(DMA_RX, DMA_RX_CH_8_15, DMA_RX_CH_PRIO_8_15);
-    DMA_CreateHandle(&s_DmaRxHandle_8_15, DMA_RX, DMA_RX_CH_8_15);
+    DMA_EnableChannel(DMA_RX, i2s_dma_channel[I2S_CH_8_15]);
+    DMA_SetChannelPriority(DMA_RX, i2s_dma_channel[I2S_CH_8_15], i2s_dma_prio[I2S_CH_8_15]);
+    DMA_CreateHandle(&s_DmaRxHandle[I2S_CH_8_15], DMA_RX, i2s_dma_channel[I2S_CH_8_15]);
 
     /**
      * Default values:
@@ -190,33 +250,33 @@ void Board_I2S_Init(void)
 
     s_RxConfig.masterSlave = kI2S_MasterSlaveNormalSlave; /* Normal Slave */
     s_RxConfig.mode = kI2S_ModeDspWsShort;                /* DSP mode, WS having one clock long pulse */
-    s_RxConfig.dataLength = TO_BITS(CH_LEN_DATA);
-    s_RxConfig.frameLength = TO_BITS(FRAME_LEN);
+    s_RxConfig.dataLength = TO_BITS(I2S_CH_LEN_DATA);
+    s_RxConfig.frameLength = TO_BITS(I2S_FRAME_LEN);
 
-    I2S_RxInit(I2S_RX_0_7, &s_RxConfig);
-    I2S_EnableSecondaryChannel(I2S_RX_0_7, kI2S_SecondaryChannel1, false, CH_POS(0, 1));
-    I2S_EnableSecondaryChannel(I2S_RX_0_7, kI2S_SecondaryChannel2, false, CH_POS(0, 2));
-    I2S_EnableSecondaryChannel(I2S_RX_0_7, kI2S_SecondaryChannel3, false, CH_POS(0, 3));
+    I2S_RxInit(i2s[I2S_CH_0_7], &s_RxConfig);
+    I2S_EnableSecondaryChannel(i2s[I2S_CH_0_7], kI2S_SecondaryChannel1, false, CH_POS(0, 1));
+    I2S_EnableSecondaryChannel(i2s[I2S_CH_0_7], kI2S_SecondaryChannel2, false, CH_POS(0, 2));
+    I2S_EnableSecondaryChannel(i2s[I2S_CH_0_7], kI2S_SecondaryChannel3, false, CH_POS(0, 3));
 
-    I2S_RxTransferCreateHandleDMA(I2S_RX_0_7, &s_RxHandle_0_7, &s_DmaRxHandle_0_7, RxCallback, (void *)&s_rxTransfer_0_7);
-    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle_0_7, s_rxDmaDescriptors_0_7, 2U);
+    I2S_RxTransferCreateHandleDMA(i2s[I2S_CH_0_7], &s_RxHandle[I2S_CH_0_7], &s_DmaRxHandle[I2S_CH_0_7], RxCallback, (void *)&s_rxTransfer[I2S_CH_0_7]);
+    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle[I2S_CH_0_7], s_rxDmaDescriptors[I2S_CH_0_7], I2S_BUFF_NUM);
 
-    s_RxConfig.position = TO_BITS(FRAME_LEN_PER_INST);
+    s_RxConfig.position = TO_BITS(I2S_FRAME_LEN_PER_INST);
 
-    I2S_RxInit(I2S_RX_8_15, &s_RxConfig);
-    I2S_EnableSecondaryChannel(I2S_RX_8_15, kI2S_SecondaryChannel1, false, CH_POS(FRAME_LEN_PER_INST, 1));
-    I2S_EnableSecondaryChannel(I2S_RX_8_15, kI2S_SecondaryChannel2, false, CH_POS(FRAME_LEN_PER_INST, 2));
-    I2S_EnableSecondaryChannel(I2S_RX_8_15, kI2S_SecondaryChannel3, false, CH_POS(FRAME_LEN_PER_INST, 3));
+    I2S_RxInit(i2s[I2S_CH_8_15], &s_RxConfig);
+    I2S_EnableSecondaryChannel(i2s[I2S_CH_8_15], kI2S_SecondaryChannel1, false, CH_POS(I2S_FRAME_LEN_PER_INST, 1));
+    I2S_EnableSecondaryChannel(i2s[I2S_CH_8_15], kI2S_SecondaryChannel2, false, CH_POS(I2S_FRAME_LEN_PER_INST, 2));
+    I2S_EnableSecondaryChannel(i2s[I2S_CH_8_15], kI2S_SecondaryChannel3, false, CH_POS(I2S_FRAME_LEN_PER_INST, 3));
 
-    I2S_RxTransferCreateHandleDMA(I2S_RX_8_15, &s_RxHandle_8_15, &s_DmaRxHandle_8_15, RxCallback, (void *)&s_rxTransfer_8_15);
-    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle_8_15, s_rxDmaDescriptors_8_15, 2U);
+    I2S_RxTransferCreateHandleDMA(i2s[I2S_CH_8_15], &s_RxHandle[I2S_CH_8_15], &s_DmaRxHandle[I2S_CH_8_15], RxCallback, (void *)&s_rxTransfer[I2S_CH_8_15]);
+    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle[I2S_CH_8_15], s_rxDmaDescriptors[I2S_CH_8_15], I2S_BUFF_NUM);
 
-    if (I2S_TransferReceiveLoopDMA(I2S_RX_0_7, &s_RxHandle_0_7, &s_rxTransfer_0_7[0], 2U) != kStatus_Success)
+    if (I2S_TransferReceiveLoopDMA(i2s[I2S_CH_0_7], &s_RxHandle[I2S_CH_0_7], &s_rxTransfer[I2S_CH_0_7][0], I2S_BUFF_NUM) != kStatus_Success)
     {
         assert(false);
     }
 
-    if (I2S_TransferReceiveLoopDMA(I2S_RX_8_15, &s_RxHandle_8_15, &s_rxTransfer_8_15[0], 2U) != kStatus_Success)
+    if (I2S_TransferReceiveLoopDMA(i2s[I2S_CH_8_15], &s_RxHandle[I2S_CH_8_15], &s_rxTransfer[I2S_CH_8_15][0], I2S_BUFF_NUM) != kStatus_Success)
     {
         assert(false);
     }
