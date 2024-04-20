@@ -158,40 +158,10 @@ static i2s_transfer_t s_rxTransfer[I2S_INST_NUM][I2S_BUFF_NUM] = {
  */
 void USB_AudioRecorderGetBuffer(uint8_t *buffer, uint32_t size)
 {
-    uint32_t k = 0U;
-
-    while (k < size)
-    {
-        for (size_t j = 0U; j < I2S_FRAME_LEN_PER_INST; j++)
-        {
-            if (s_audioPosition[I2S_CH_0_7] == (I2S_BUFF_SIZE * I2S_BUFF_NUM))
-            {
-                s_audioPosition[I2S_CH_0_7] = 0U;
-            }
-
-            if ((j % 4) != 0) {
-                *(buffer + k) = s_i2sBuff[I2S_CH_0_7][s_audioPosition[I2S_CH_0_7]];
-            } else {
-                *(buffer + k) = 0x00;
-            }
-            s_audioPosition[I2S_CH_0_7]++;
-            k++;
-        }
-
-        for (size_t j = 0U; j < I2S_FRAME_LEN_PER_INST; j++)
-        {
-            if (s_audioPosition[I2S_CH_8_15] == (I2S_BUFF_SIZE * I2S_BUFF_NUM))
-            {
-                s_audioPosition[I2S_CH_8_15] = 0U;
-            }
-
-            if ((j % 4) != 0) {
-                *(buffer + k) = s_i2sBuff[I2S_CH_8_15][s_audioPosition[I2S_CH_8_15]];
-            } else {
-                *(buffer + k) = 0x00;
-            }
-            s_audioPosition[I2S_CH_8_15]++;
-            k++;
+    for (size_t k = 0; k < size; k += I2S_FRAME_LEN) {
+        for (size_t i = 0; i < I2S_INST_NUM; i++) {
+            memcpy(buffer + k + (i * I2S_FRAME_LEN_PER_INST), &s_i2sBuff[i][s_audioPosition[i]], I2S_FRAME_LEN_PER_INST);
+            s_audioPosition[i] = (s_audioPosition[i] + I2S_FRAME_LEN_PER_INST) % (I2S_BUFF_SIZE * I2S_BUFF_NUM);
         }
     }
 }
