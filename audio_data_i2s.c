@@ -149,13 +149,13 @@ void Board_I2S_Init(void)
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_ShareSet0);
 
     DMA_Init(DMA_RX);
-    DMA_EnableChannel(DMA_RX, i2s_dma_channel[I2S_CH_0_7]);
-    DMA_SetChannelPriority(DMA_RX, i2s_dma_channel[I2S_CH_0_7], i2s_dma_prio[I2S_CH_0_7]);
-    DMA_CreateHandle(&s_DmaRxHandle[I2S_CH_0_7], DMA_RX, i2s_dma_channel[I2S_CH_0_7]);
 
-    DMA_EnableChannel(DMA_RX, i2s_dma_channel[I2S_CH_8_15]);
-    DMA_SetChannelPriority(DMA_RX, i2s_dma_channel[I2S_CH_8_15], i2s_dma_prio[I2S_CH_8_15]);
-    DMA_CreateHandle(&s_DmaRxHandle[I2S_CH_8_15], DMA_RX, i2s_dma_channel[I2S_CH_8_15]);
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        DMA_EnableChannel(DMA_RX, i2s_dma_channel[inst]);
+        DMA_SetChannelPriority(DMA_RX, i2s_dma_channel[inst], i2s_dma_prio[inst]);
+        DMA_CreateHandle(&s_DmaRxHandle[inst], DMA_RX, i2s_dma_channel[inst]);
+    }
 
     /**
      * Default values:
@@ -177,36 +177,28 @@ void Board_I2S_Init(void)
      */
     I2S_RxGetDefaultConfig(&s_RxConfig);
 
-    s_RxConfig.masterSlave = kI2S_MasterSlaveNormalSlave; /* Normal Slave */
-    s_RxConfig.mode = kI2S_ModeDspWsShort;                /* DSP mode, WS having one clock long pulse */
-    s_RxConfig.dataLength = TO_BITS(I2S_CH_LEN_DATA);
-    s_RxConfig.frameLength = TO_BITS(I2S_FRAME_LEN);
-
-    I2S_RxInit(i2s[I2S_CH_0_7], &s_RxConfig);
-    I2S_EnableSecondaryChannel(i2s[I2S_CH_0_7], kI2S_SecondaryChannel1, false, CH_POS(0, 1));
-    I2S_EnableSecondaryChannel(i2s[I2S_CH_0_7], kI2S_SecondaryChannel2, false, CH_POS(0, 2));
-    I2S_EnableSecondaryChannel(i2s[I2S_CH_0_7], kI2S_SecondaryChannel3, false, CH_POS(0, 3));
-
-    I2S_RxTransferCreateHandleDMA(i2s[I2S_CH_0_7], &s_RxHandle[I2S_CH_0_7], &s_DmaRxHandle[I2S_CH_0_7], RxCallback, (void *)&s_rxTransfer[I2S_CH_0_7]);
-    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle[I2S_CH_0_7], s_rxDmaDescriptors[I2S_CH_0_7], I2S_BUFF_NUM);
-
-    s_RxConfig.position = TO_BITS(I2S_FRAME_LEN_PER_INST);
-
-    I2S_RxInit(i2s[I2S_CH_8_15], &s_RxConfig);
-    I2S_EnableSecondaryChannel(i2s[I2S_CH_8_15], kI2S_SecondaryChannel1, false, CH_POS(I2S_FRAME_LEN_PER_INST, 1));
-    I2S_EnableSecondaryChannel(i2s[I2S_CH_8_15], kI2S_SecondaryChannel2, false, CH_POS(I2S_FRAME_LEN_PER_INST, 2));
-    I2S_EnableSecondaryChannel(i2s[I2S_CH_8_15], kI2S_SecondaryChannel3, false, CH_POS(I2S_FRAME_LEN_PER_INST, 3));
-
-    I2S_RxTransferCreateHandleDMA(i2s[I2S_CH_8_15], &s_RxHandle[I2S_CH_8_15], &s_DmaRxHandle[I2S_CH_8_15], RxCallback, (void *)&s_rxTransfer[I2S_CH_8_15]);
-    I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle[I2S_CH_8_15], s_rxDmaDescriptors[I2S_CH_8_15], I2S_BUFF_NUM);
-
-    if (I2S_TransferReceiveLoopDMA(i2s[I2S_CH_0_7], &s_RxHandle[I2S_CH_0_7], &s_rxTransfer[I2S_CH_0_7][0], I2S_BUFF_NUM) != kStatus_Success)
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        assert(false);
+        s_RxConfig.masterSlave = kI2S_MasterSlaveNormalSlave; /* Normal Slave */
+        s_RxConfig.mode = kI2S_ModeDspWsShort;                /* DSP mode, WS having one clock long pulse */
+        s_RxConfig.dataLength = TO_BITS(I2S_CH_LEN_DATA);
+        s_RxConfig.frameLength = TO_BITS(I2S_FRAME_LEN);
+        s_RxConfig.position = (inst * TO_BITS(I2S_FRAME_LEN_PER_INST));
+
+        I2S_RxInit(i2s[inst], &s_RxConfig);
+        I2S_EnableSecondaryChannel(i2s[inst], kI2S_SecondaryChannel1, false, CH_POS((inst * I2S_FRAME_LEN_PER_INST), 1));
+        I2S_EnableSecondaryChannel(i2s[inst], kI2S_SecondaryChannel2, false, CH_POS((inst * I2S_FRAME_LEN_PER_INST), 2));
+        I2S_EnableSecondaryChannel(i2s[inst], kI2S_SecondaryChannel3, false, CH_POS((inst * I2S_FRAME_LEN_PER_INST), 3));
+
+        I2S_RxTransferCreateHandleDMA(i2s[inst], &s_RxHandle[inst], &s_DmaRxHandle[inst], RxCallback, (void *)&s_rxTransfer[inst]);
+        I2S_TransferInstallLoopDMADescriptorMemory(&s_RxHandle[inst], s_rxDmaDescriptors[inst], I2S_BUFF_NUM);
     }
 
-    if (I2S_TransferReceiveLoopDMA(i2s[I2S_CH_8_15], &s_RxHandle[I2S_CH_8_15], &s_rxTransfer[I2S_CH_8_15][0], I2S_BUFF_NUM) != kStatus_Success)
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        assert(false);
+        if (I2S_TransferReceiveLoopDMA(i2s[inst], &s_RxHandle[inst], &s_rxTransfer[inst][0], I2S_BUFF_NUM) != kStatus_Success)
+        {
+            assert(false);
+        }
     }
 }
