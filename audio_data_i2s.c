@@ -40,6 +40,12 @@
 #define USE_FILTER_32_DOWN (1)
 #define FILTER_32 (0xFFFFFF00)
 
+/**
+ * Number of I2S instances. Each I2S instance (controller) supports at maximum 8
+ * channels, so we need 2 instances for 16-channels [2 instances]
+ */
+#define I2S_INST_NUM ARRAY_SIZE(i2s)
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -63,35 +69,12 @@ USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuff[USB_MAX_PACKET
 SDK_ALIGN(static uint8_t s_i2sBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
 SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors[I2S_INST_NUM][I2S_BUFF_NUM], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
 
+static i2s_transfer_t s_rxTransfer[I2S_INST_NUM][I2S_BUFF_NUM] = { 0 };
 static i2s_dma_handle_t s_RxHandle[I2S_INST_NUM];
 static dma_handle_t s_DmaRxHandle[I2S_INST_NUM];
 static uint32_t s_audioPosition[I2S_INST_NUM] = { 0 };
 
 volatile unsigned int first_int = 0;
-
-static i2s_transfer_t s_rxTransfer[I2S_INST_NUM][I2S_BUFF_NUM] = {
-    {
-        {
-            .data = &s_i2sBuff[I2S_CH_0_7][0],
-            .dataSize = I2S_BUFF_SIZE,
-        },
-        {
-            .data = &s_i2sBuff[I2S_CH_0_7][I2S_BUFF_SIZE],
-            .dataSize = I2S_BUFF_SIZE,
-        }, 
-    },
-    {
-        {
-            .data = &s_i2sBuff[I2S_CH_8_15][0],
-            .dataSize = I2S_BUFF_SIZE,
-        },
-        {
-            .data = &s_i2sBuff[I2S_CH_8_15][I2S_BUFF_SIZE],
-            .dataSize = I2S_BUFF_SIZE,
-        }, 
-    },
-};
-
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -129,8 +112,10 @@ static void RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t comple
 {
     if (first_int == 0)
     {
-        s_audioPosition[I2S_CH_0_7] = 0;
-        s_audioPosition[I2S_CH_8_15] = 0;
+        for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+        {
+            s_audioPosition[inst] = 0;
+        }
 
         first_int = 1;
     }
@@ -179,6 +164,12 @@ void Board_I2S_Init(void)
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
+        for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
+        {
+            s_rxTransfer[inst][buf].data = &s_i2sBuff[inst][buf * I2S_BUFF_SIZE];
+            s_rxTransfer[inst][buf].dataSize =I2S_BUFF_SIZE;
+        }
+
         s_RxConfig.masterSlave = kI2S_MasterSlaveNormalSlave; /* Normal Slave */
         s_RxConfig.mode = kI2S_ModeDspWsShort;                /* DSP mode, WS having one clock long pulse */
         s_RxConfig.dataLength = TO_BITS(I2S_CH_LEN_DATA);

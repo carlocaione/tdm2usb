@@ -46,18 +46,6 @@
 #define I2S_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
 
 /**
- * Number of I2S instances. Each I2S instance (controller) supports at maximum 8
- * channels, so we need 2 instances for 16-channels [2 instances]
- */
-#define I2S_INST_NUM (2U)
-
-/**
- * Indexes for I2S instances.
- */
-#define I2S_CH_0_7 (0U)
-#define I2S_CH_8_15 (1U)
-
-/**
  * Number of buffers for I2S DMA ping-pong [2]
  */
 #define I2S_BUFF_NUM (2U)
