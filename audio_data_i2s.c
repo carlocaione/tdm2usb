@@ -25,96 +25,40 @@
  * Definitions
  ******************************************************************************/
 /**
- * Silly macro for byte -> bits conversion.
- */
-#define TO_BITS(n) ((n) << 3U)
-
-/**
- * USB max packet size. We default to High-Speed [384 bytes]
- */
-#define AUDIO_ENDPOINT_MAX_PACKET_SIZE (HS_ISO_IN_ENDP_PACKET_SIZE)
-
-/**
- * Number of I2S instances. Each I2S instance (controller) supports at maximum 8
- * channels, so we need 2 instances [2 instances]
- */
-#define I2S_INST_NUM (2U)
-
-/**
- * Indexes for I2S instances.
- */
-#define I2S_CH_0_7 (0U)
-#define I2S_CH_8_15 (1U)
-
-/**
- * Number of buffers for I2S DMA ping-pong [2]
- */
-#define I2S_BUFF_NUM (2U)
-
-/**
- * Buffer size for each I2S DMA buffer. We use 4 times the size of the USB packet [1536 bytes]
- */
-#define I2S_BUFF_SIZE (AUDIO_ENDPOINT_MAX_PACKET_SIZE * 4U)
-
-/**
- * Number of total channels [16 channels]
- */
-#define I2S_CH_NUM (16U)
-
-/**
- * Number of channels per I2S pair (L/R) [2 channels]
- */
-#define I2S_CH_NUM_PER_PAIR (2U)
-
-/**
- * Data bytes per channels [4 bytes / 32 bits]
- */
-#define I2S_CH_LEN_DATA (4U)
-
-/**
- *  Number of channels per I2S instance [8 channels]
- */
-#define I2S_CH_NUM_PER_INST (I2S_CH_NUM / I2S_INST_NUM)
-
-/**
- * Data bytes per I2S pair [8 bytes]
- */
-#define I2S_CH_LEN_PER_PAIR (I2S_CH_LEN_DATA * I2S_CH_NUM_PER_PAIR)
-
-/**
- * Total frame length [64 bytes]
- */
-#define I2S_FRAME_LEN (I2S_CH_NUM * I2S_CH_LEN_DATA)
-
-/**
- * Frame length per I2S instance [32 bytes]
- */
-#define I2S_FRAME_LEN_PER_INST (I2S_CH_NUM_PER_INST * I2S_CH_LEN_DATA)
-
-/**
  * Helper macro to set the offset for the secondary channels.
  */
 #define CH_POS(off, n) (TO_BITS(off) + (TO_BITS(I2S_CH_LEN_PER_PAIR) * (n)))
+
+/**
+ * Set USE_FILTER_32_DOWN to (1) (and the FILTER_32 accordingly) when you are
+ * retrieving 32-bits per channel from I2S but the useful data is encoded in
+ * fewer bits (for example when only 24-bits are actually carrying the real
+ * audio information out of 32-bits).
+ *
+ * Note: this only works with 32-bit channels.
+ */
+#define USE_FILTER_32_DOWN (1)
+#define FILTER_32 (0xFFFFFF00)
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 static I2S_Type *i2s[] = {
-    I2S5,
-    I2S4,
+    I2S_0,
+    I2S_1,
 };
 
 static uint32_t i2s_dma_channel[] = {
-    10, /** Flexcomm5 */
-    8,  /** Flexcomm4 */
+    I2S_0_DMA_CH,
+    I2S_1_DMA_CH,
 };
 
 static dma_priority_t i2s_dma_prio[] = {
-    kDMA_ChannelPriority2,
-    kDMA_ChannelPriority2,
+    I2S_0_DMA_CH_PRIO,
+    I2S_1_DMA_CH_PRIO,
 };
 
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuff[AUDIO_ENDPOINT_MAX_PACKET_SIZE];
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuff[USB_MAX_PACKET_SIZE];
 
 SDK_ALIGN(static uint8_t s_i2sBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
 SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors[I2S_INST_NUM][I2S_BUFF_NUM], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
@@ -158,22 +102,37 @@ static i2s_transfer_t s_rxTransfer[I2S_INST_NUM][I2S_BUFF_NUM] = {
  */
 void USB_AudioRecorderGetBuffer(uint8_t *buffer, uint32_t size)
 {
-    for (size_t k = 0; k < size; k += I2S_FRAME_LEN) {
-        for (size_t i = 0; i < I2S_INST_NUM; i++) {
-            memcpy(buffer + k + (i * I2S_FRAME_LEN_PER_INST), &s_i2sBuff[i][s_audioPosition[i]], I2S_FRAME_LEN_PER_INST);
-            s_audioPosition[i] = (s_audioPosition[i] + I2S_FRAME_LEN_PER_INST) % (I2S_BUFF_SIZE * I2S_BUFF_NUM);
+    assert(size % I2S_FRAME_LEN == 0);
+
+    for (size_t k = 0; k < size; k += I2S_FRAME_LEN)
+    {
+        for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+        {
+            uint32_t *pos = &s_audioPosition[inst];
+#if USE_FILTER_32_DOWN
+            uint32_t *p_buffer = (uint32_t *) (buffer + k);
+            uint32_t *p_i2s_buffer = (uint32_t *) &s_i2sBuff[inst][*pos];
+
+            for (size_t ch = 0; ch < I2S_CH_NUM_PER_INST; ch++)
+            {
+                p_buffer[ch + (inst * I2S_CH_NUM_PER_INST)] = p_i2s_buffer[ch] & FILTER_32;
+            }
+#else
+            memcpy(buffer + k + (inst * I2S_FRAME_LEN_PER_INST), &s_i2sBuff[inst][*pos], I2S_FRAME_LEN_PER_INST);
+#endif
+            *pos = (*pos + I2S_FRAME_LEN_PER_INST) % (I2S_BUFF_SIZE * I2S_BUFF_NUM);
         }
     }
 }
 
 static void RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
 {
-    if (first_int == 0U)
+    if (first_int == 0)
     {
-        s_audioPosition[I2S_CH_0_7] = 0U;
-        s_audioPosition[I2S_CH_8_15] = 0U;
+        s_audioPosition[I2S_CH_0_7] = 0;
+        s_audioPosition[I2S_CH_8_15] = 0;
 
-        first_int = 1U;
+        first_int = 1;
     }
 }
 
