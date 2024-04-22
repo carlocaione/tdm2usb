@@ -26,7 +26,7 @@
 /**
  * Helper macro to set the offset for the secondary channels.
  */
-#define CH_POS(off, n) (TO_BITS(off) + (TO_BITS(I2S_CH_LEN_PER_PAIR) * (n)))
+#define CH_OFF(off, n) (TO_BITS(off) + (TO_BITS(I2S_CH_LEN_PER_PAIR) * (n)))
 
 /**
  * Set USE_FILTER_32_DOWN to (1) (and the FILTER_32 accordingly) when you are
@@ -59,8 +59,8 @@ static dma_priority_t i2s_dma_prio[] = {
 
 USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuff[USB_MAX_PACKET_SIZE];
 
-SDK_ALIGN(static uint8_t s_i2sBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
 SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors[I2S_INST_NUM][I2S_BUFF_NUM], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
+SDK_ALIGN(static uint8_t s_i2sBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
 
 static i2s_transfer_t s_rxTransfer[I2S_INST_NUM][I2S_BUFF_NUM];
 static i2s_dma_handle_t s_RxHandle[I2S_INST_NUM];
@@ -194,11 +194,11 @@ static void DMA_SetupChannels(size_t inst)
  */
 static void I2S_DMA_Setup(size_t inst, i2s_config_t *config)
 {
-    dma_descriptor_t *dma_descriptor = &s_rxDmaDescriptors[inst][0];
+    dma_descriptor_t *dma_descriptor = s_rxDmaDescriptors[inst];
     i2s_dma_handle_t *i2s_dma_handle = &s_RxHandle[inst];
-    i2s_transfer_t *i2s_transfer = &s_rxTransfer[inst][0];
+    i2s_transfer_t *i2s_transfer = s_rxTransfer[inst];
     dma_handle_t *dma_handle = &s_DmaRxHandle[inst];
-    uint8_t *i2s_buff = &s_i2sBuff[inst][0];
+    uint8_t *i2s_buff = s_i2sBuff[inst];
     I2S_Type *i2s_base = i2s[inst];
 
     for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
@@ -211,9 +211,9 @@ static void I2S_DMA_Setup(size_t inst, i2s_config_t *config)
 
     I2S_RxInit(i2s_base, config);
 
-    I2S_EnableSecondaryChannel(i2s_base, kI2S_SecondaryChannel1, false, CH_POS((inst * I2S_FRAME_LEN_PER_INST), 1));
-    I2S_EnableSecondaryChannel(i2s_base, kI2S_SecondaryChannel2, false, CH_POS((inst * I2S_FRAME_LEN_PER_INST), 2));
-    I2S_EnableSecondaryChannel(i2s_base, kI2S_SecondaryChannel3, false, CH_POS((inst * I2S_FRAME_LEN_PER_INST), 3));
+    I2S_EnableSecondaryChannel(i2s_base, kI2S_SecondaryChannel1, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 1));
+    I2S_EnableSecondaryChannel(i2s_base, kI2S_SecondaryChannel2, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 2));
+    I2S_EnableSecondaryChannel(i2s_base, kI2S_SecondaryChannel3, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 3));
 
     I2S_RxTransferCreateHandleDMA(i2s_base, i2s_dma_handle, dma_handle, RxCallback, (void *) i2s_transfer);
     I2S_TransferInstallLoopDMADescriptorMemory(i2s_dma_handle, dma_descriptor, I2S_BUFF_NUM);
@@ -226,7 +226,7 @@ static void I2S_DMA_Setup(size_t inst, i2s_config_t *config)
  */
 static void I2S_StartRx(size_t inst)
 {
-    i2s_transfer_t *i2s_transfer = &s_rxTransfer[inst][0];
+    i2s_transfer_t *i2s_transfer = s_rxTransfer[inst];
     i2s_dma_handle_t *i2s_dma_handle = &s_RxHandle[inst];
     I2S_Type *i2s_base = i2s[inst];
 
