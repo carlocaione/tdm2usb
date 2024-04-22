@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2015 - 2016, Freescale Semiconductor, Inc.
- * Copyright 2016 - 2017 NXP
+ * Copyright (c) 2023, Carlo Caione <ccaione@baylibre.com>
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -8,6 +7,22 @@
 
 #ifndef __AUDIO_DATA_I2S_H__
 #define __AUDIO_DATA_I2S_H__ 1
+
+/**
+ * Case for 16ch / 32bits:
+ *
+ * +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+ * |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+ * +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+ *  CH
+ * +--+ 4B
+ *  PAIR
+ * +-----+ 2CH / 8B
+ *  FRAME
+ * +-----------------------------------------------+ 16CH / 64B
+ *  FRAME PER INSTANCE
+ * +-----------------------+ 8CH / 32B
+ */
 
 /*******************************************************************************
  * Definitions
@@ -38,6 +53,12 @@
  */
 #define I2S_0_DMA_CH (10)
 #define I2S_1_DMA_CH (8)
+
+/**
+ * Number of I2S instances. Each I2S instance (controller) supports at maximum 8
+ * channels, so we need 2 instances for 16-channels [2 instances]
+ */
+#define I2S_INST_NUM (ARRAY_SIZE(i2s))
 
 /**
  * I2S DMA chennels priority.

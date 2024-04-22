@@ -55,7 +55,7 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
 usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *param);
 extern void USB_AudioRecorderGetBuffer(uint8_t *buffer, uint32_t size);
 #if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
-extern void Board_I2S_Init(void);
+extern void BOARD_I2S_Init(void);
 #endif
 #if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
 extern void SCTIMER_CaptureInit(void);
@@ -999,7 +999,7 @@ void main(void)
 #endif
 
 #if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
-    Board_I2S_Init();
+    BOARD_I2S_Init();
 #endif
 
     if (xTaskCreate(APPTask,                                /* pointer to the task */
