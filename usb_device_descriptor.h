@@ -64,21 +64,12 @@
 #define USB_AUDIO_GENERATOR_CONTROL_INTERFACE_ALTERNATE_0     (0U)
 #define USB_AUDIO_GENERATOR_STREAM_INTERFACE_ALTERNATE_0      (0U)
 #define USB_AUDIO_GENERATOR_STREAM_INTERFACE_ALTERNATE_1      (1U)
-#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
 #define AUDIO_SAMPLING_RATE_KHZ (48U) /* 48 dedicates 48Khz */
-#else
-#define AUDIO_SAMPLING_RATE_KHZ (8U) /* 8 dedicates 8Khz */
-#endif
 
 /* Audio data format */
 #define AUDIO_FORMAT_CHANNELS (0x10U)
-#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
 #define AUDIO_FORMAT_BITS (32U)
 #define AUDIO_FORMAT_SIZE (0x04U)
-#else
-#define AUDIO_FORMAT_BITS (8U)
-#define AUDIO_FORMAT_SIZE (0x01U)
-#endif
 
 /* Packet size and interval. */
 #define HS_INTERRUPT_IN_PACKET_SIZE (8U)

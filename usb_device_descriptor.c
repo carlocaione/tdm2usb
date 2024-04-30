@@ -366,13 +366,8 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,             /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_STREAMING_FORMAT_TYPE, /* FORMAT_TYPE descriptor subtype   */
     USB_AUDIO_FORMAT_TYPE_I, /* The format type AudioStreaming interfae using is FORMAT_TYPE_I (0x01)   */
-#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
     0x04U, /* The number of bytes occupied by one audio subslot. Can be 1, 2, 3 or 4.  */
     0x20U, /* The number of effectively used bits from the available bits in an audio subslot   */
-#else
-    0x01U, /* The number of bytes occupied by one audio subslot. Can be 1, 2, 3 or 4.  */
-    0x08U, /* The number of effectively used bits from the available bits in an audio subslot   */
-#endif
 
     /* ENDPOINT Descriptor */
     USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH, /* Descriptor size is 7 bytes  */
