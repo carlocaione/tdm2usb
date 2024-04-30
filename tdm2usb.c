@@ -109,7 +109,6 @@ usb_audio_generator_struct_t s_audioGenerator = {
     {0x00U, 0x00U, 0x01U}, /* minSamplingFrequency */
     {0x00U, 0x00U, 0x01U}, /* maxSamplingFrequency */
     {0x00U, 0x00U, 0x01U}, /* resSamplingFrequency */
-#if (USB_DEVICE_CONFIG_AUDIO_CLASS_2_0)
     0U,             /* curMute20 */
     1U,             /* curClockValid */
     {0x00U, 0x1FU}, /* curVolume20 */
@@ -121,7 +120,6 @@ usb_audio_generator_struct_t s_audioGenerator = {
     {1U, 8000U, 8000U, 0U}, /* freqControlRange */
 #endif
     {1U, 0x8001U, 0x7FFFU, 1U}, /* volumeControlRange */
-#endif
     0,              /* currentConfiguration */
     {0, 0},         /* currentInterfaceAlternateSetting */
     USB_SPEED_FULL, /* speed */
@@ -336,22 +334,12 @@ usb_status_t USB_DeviceAudioRequest(class_handle_t handle, uint32_t event, void 
     switch (event)
     {
         case USB_DEVICE_AUDIO_FU_GET_CUR_MUTE_CONTROL:
-#if (USB_DEVICE_CONFIG_AUDIO_CLASS_2_0)
             request->buffer = (uint8_t *)&s_audioGenerator.curMute20;
             request->length = sizeof(s_audioGenerator.curMute20);
-#else
-            request->buffer = &s_audioGenerator.curMute;
-            request->length = sizeof(s_audioGenerator.curMute);
-#endif
             break;
         case USB_DEVICE_AUDIO_FU_GET_CUR_VOLUME_CONTROL:
-#if (USB_DEVICE_CONFIG_AUDIO_CLASS_2_0)
             request->buffer = (uint8_t *)&s_audioGenerator.curVolume20;
             request->length = sizeof(s_audioGenerator.curVolume20);
-#else
-            request->buffer = s_audioGenerator.curVolume;
-            request->length = sizeof(s_audioGenerator.curVolume);
-#endif
             break;
         case USB_DEVICE_AUDIO_FU_GET_CUR_BASS_CONTROL:
             request->buffer = &s_audioGenerator.curBass;
@@ -433,7 +421,6 @@ usb_status_t USB_DeviceAudioRequest(class_handle_t handle, uint32_t event, void 
             request->buffer = s_audioGenerator.resDelay;
             request->length = sizeof(s_audioGenerator.resDelay);
             break;
-#if (USB_DEVICE_CONFIG_AUDIO_CLASS_2_0)
         case USB_DEVICE_AUDIO_CS_GET_CUR_SAMPLING_FREQ_CONTROL:
             request->buffer = (uint8_t *)&s_audioGenerator.curSampleFrequency;
             request->length = sizeof(s_audioGenerator.curSampleFrequency);
@@ -464,54 +451,7 @@ usb_status_t USB_DeviceAudioRequest(class_handle_t handle, uint32_t event, void 
             request->buffer = (uint8_t *)&s_audioGenerator.volumeControlRange;
             request->length = sizeof(s_audioGenerator.volumeControlRange);
             break;
-#else
-        case USB_DEVICE_AUDIO_EP_GET_CUR_SAMPLING_FREQ_CONTROL:
-            request->buffer = s_audioGenerator.curSamplingFrequency;
-            request->length = sizeof(s_audioGenerator.curSamplingFrequency);
-            break;
-        case USB_DEVICE_AUDIO_EP_GET_MIN_SAMPLING_FREQ_CONTROL:
-            request->buffer = s_audioGenerator.minSamplingFrequency;
-            request->length = sizeof(s_audioGenerator.minSamplingFrequency);
-            break;
-        case USB_DEVICE_AUDIO_EP_GET_MAX_SAMPLING_FREQ_CONTROL:
-            request->buffer = s_audioGenerator.maxSamplingFrequency;
-            request->length = sizeof(s_audioGenerator.maxSamplingFrequency);
-            break;
-        case USB_DEVICE_AUDIO_EP_GET_RES_SAMPLING_FREQ_CONTROL:
-            request->buffer = s_audioGenerator.resSamplingFrequency;
-            request->length = sizeof(s_audioGenerator.resSamplingFrequency);
-            break;
-        case USB_DEVICE_AUDIO_EP_SET_CUR_SAMPLING_FREQ_CONTROL:
-            if (request->isSetup == 1U)
-            {
-                request->buffer = s_audioGenerator.curSamplingFrequency;
-                request->length = sizeof(s_audioGenerator.curSamplingFrequency);
-            }
-            break;
-        case USB_DEVICE_AUDIO_EP_SET_RES_SAMPLING_FREQ_CONTROL:
-            if (request->isSetup == 1U)
-            {
-                request->buffer = s_audioGenerator.resSamplingFrequency;
-                request->length = sizeof(s_audioGenerator.resSamplingFrequency);
-            }
-            break;
-        case USB_DEVICE_AUDIO_EP_SET_MAX_SAMPLING_FREQ_CONTROL:
-            if (request->isSetup == 1U)
-            {
-                request->buffer = s_audioGenerator.maxSamplingFrequency;
-                request->length = sizeof(s_audioGenerator.maxSamplingFrequency);
-            }
-            break;
-        case USB_DEVICE_AUDIO_EP_SET_MIN_SAMPLING_FREQ_CONTROL:
-            if (request->isSetup == 1U)
-            {
-                request->buffer = s_audioGenerator.minSamplingFrequency;
-                request->length = sizeof(s_audioGenerator.minSamplingFrequency);
-            }
-            break;
-#endif
         case USB_DEVICE_AUDIO_FU_SET_CUR_VOLUME_CONTROL:
-#if (USB_DEVICE_CONFIG_AUDIO_CLASS_2_0)
             if (request->isSetup == 1U)
             {
                 request->buffer = s_audioGenerator.curVolume20;
@@ -522,18 +462,6 @@ usb_status_t USB_DeviceAudioRequest(class_handle_t handle, uint32_t event, void 
                 uint16_t volume = (uint16_t)((uint16_t)s_audioGenerator.curVolume20[1] << 8U);
                 volume |= (uint8_t)(s_audioGenerator.curVolume20[0]);
             }
-#else
-            if (request->isSetup == 1U)
-            {
-                request->buffer = s_audioGenerator.curVolume;
-                request->length = sizeof(s_audioGenerator.curVolume);
-            }
-            else
-            {
-                uint16_t volume = (uint16_t)((uint16_t)s_audioGenerator.curVolume[1] << 8U);
-                volume |= (uint8_t)(s_audioGenerator.curVolume[0]);
-            }
-#endif
             break;
         case USB_DEVICE_AUDIO_FU_SET_CUR_MUTE_CONTROL:
             if (request->isSetup == 1U)

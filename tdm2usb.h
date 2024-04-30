@@ -90,30 +90,21 @@ typedef struct _usb_audio_generator_struct
     uint8_t maxTreble;
     uint8_t resTreble;
     uint8_t curAutomaticGain;
-#if (USB_DEVICE_CONFIG_AUDIO_CLASS_2_0)
     uint8_t curDelay[4]; /* need to consider the endians */
     uint8_t minDelay[4]; /* need to consider the endians */
     uint8_t maxDelay[4]; /* need to consider the endians */
     uint8_t resDelay[4]; /* need to consider the endians */
-#else
-    uint8_t curDelay[2]; /* need to consider the endians */
-    uint8_t minDelay[2]; /* need to consider the endians */
-    uint8_t maxDelay[2]; /* need to consider the endians */
-    uint8_t resDelay[2]; /* need to consider the endians */
-#endif
     uint8_t curLoudness;
     uint8_t curSamplingFrequency[3]; /* need to consider the endians */
     uint8_t minSamplingFrequency[3]; /* need to consider the endians */
     uint8_t maxSamplingFrequency[3]; /* need to consider the endians */
     uint8_t resSamplingFrequency[3]; /* need to consider the endians */
-#if (USB_DEVICE_CONFIG_AUDIO_CLASS_2_0)
     uint8_t curMute20;
     uint8_t curClockValid;
     uint8_t curVolume20[2];
     uint32_t curSampleFrequency;
     usb_device_control_range_layout3_struct_t freqControlRange;
     usb_device_control_range_layout2_struct_t volumeControlRange;
-#endif
     uint8_t currentConfiguration;
     uint8_t currentInterfaceAlternateSetting[USB_AUDIO_GENERATOR_INTERFACE_COUNT];
     uint8_t speed;
