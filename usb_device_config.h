@@ -84,13 +84,6 @@
 
 /* @} */
 
-/*! @brief Whether device supports USB Audio class 2.0. 1U supported, 0U not supported */
-#if USB_DEVICE_CONFIG_AUDIO
-#ifndef USB_DEVICE_CONFIG_AUDIO_CLASS_2_0
-#define USB_DEVICE_CONFIG_AUDIO_CLASS_2_0 (1U)
-#endif
-#endif
-
 /*! @brief Whether device is self power. 1U supported, 0U not supported */
 #define USB_DEVICE_CONFIG_SELF_POWER (1U)
 
