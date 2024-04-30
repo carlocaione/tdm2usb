@@ -54,9 +54,7 @@ void USB_DeviceTaskFn(void *deviceHandle);
 usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void *param);
 usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *param);
 extern void USB_AudioRecorderGetBuffer(uint8_t *buffer, uint32_t size);
-#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
 extern void BOARD_I2S_Init(void);
-#endif
 #if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
 extern void SCTIMER_CaptureInit(void);
 #endif
@@ -112,13 +110,8 @@ usb_audio_generator_struct_t s_audioGenerator = {
     0U,             /* curMute20 */
     1U,             /* curClockValid */
     {0x00U, 0x1FU}, /* curVolume20 */
-#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
     48000U,                   /* curSampleFrequency, This should be changed to 48000 if sampling rate is 48k */
     {1U, 48000U, 48000U, 0U}, /* freqControlRange */
-#else
-    8000U,                  /* curSampleFrequency, This should be changed to 8000 if sampling rate is 8k */
-    {1U, 8000U, 8000U, 0U}, /* freqControlRange */
-#endif
     {1U, 0x8001U, 0x7FFFU, 1U}, /* volumeControlRange */
     0,              /* currentConfiguration */
     {0, 0},         /* currentInterfaceAlternateSetting */
@@ -926,9 +919,7 @@ void main(void)
     s_audioGenerator.curAudioPllFrac = CLKCTL1->AUDIOPLL0NUM;
 #endif
 
-#if defined(AUDIO_DATA_SOURCE_I2S) && (AUDIO_DATA_SOURCE_I2S > 0U)
     BOARD_I2S_Init();
-#endif
 
     if (xTaskCreate(APPTask,                                /* pointer to the task */
                     "app task",                             /* task name for kernel awareness debugging */
