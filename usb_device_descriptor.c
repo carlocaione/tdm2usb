@@ -56,7 +56,17 @@ usb_device_audio_entity_struct_t g_UsbDeviceAudioEntity[] = {
         0U,
     },
     {
+        USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID,
+        USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT,
+        0U,
+    },
+    {
         USB_AUDIO_RECORDER_CONTROL_INPUT_TERMINAL_ID,
+        USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL,
+        0U,
+    },
+    {
+        USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL,
         0U,
     },
@@ -67,6 +77,11 @@ usb_device_audio_entity_struct_t g_UsbDeviceAudioEntity[] = {
     },
     {
         USB_AUDIO_RECORDER_CONTROL_OUTPUT_TERMINAL_ID,
+        USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL,
+        0U,
+    },
+    {
+        USB_AUDIO_PLAYER_CONTROL_OUTPUT_TERMINAL_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL,
         0U,
     },
@@ -193,7 +208,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * Configuration Descriptor:
      * bLength                 9
      * bDescriptorType         2
-     * wTotalLength       0x008d
+     * wTotalLength       0x00b2
      * bNumInterfaces          2
      * bConfigurationValue     1
      * iConfiguration          0
@@ -204,12 +219,12 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_DESCRIPTOR_LENGTH_CONFIGURE, /* Size of this descriptor in bytes */
     USB_DESCRIPTOR_TYPE_CONFIGURE,   /* CONFIGURATION Descriptor Type */
     USB_SHORT_GET_LOW(USB_DESCRIPTOR_LENGTH_CONFIGURE + 0x08U + USB_DESCRIPTOR_LENGTH_INTERFACE +
-                      USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + 0x08U + 0x11U + 0x0EU + 0x0CU +
+                      USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + (0x08U * 2) + (0x11U * 2) + 0x0EU + (0x0CU * 2) +
                       USB_DESCRIPTOR_LENGTH_INTERFACE + USB_DESCRIPTOR_LENGTH_INTERFACE + 0x10U + 0x06U +
                       USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH + USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH),
     USB_SHORT_GET_HIGH(
         USB_DESCRIPTOR_LENGTH_CONFIGURE + 0x08U + USB_DESCRIPTOR_LENGTH_INTERFACE +
-        USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + 0x08U + 0x11U + 0x0EU + 0x0CU + USB_DESCRIPTOR_LENGTH_INTERFACE +
+        USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + (0x08U * 2) + (0x11U * 2) + 0x0EU + (0x0CU * 2) + USB_DESCRIPTOR_LENGTH_INTERFACE +
         USB_DESCRIPTOR_LENGTH_INTERFACE + 0x10U + 0x06U + USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH +
         USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH), /* Total length of data returned for this configuration. */
     USB_AUDIO_GENERATOR_INTERFACE_COUNT,           /* Number of interfaces supported by this configuration */
@@ -280,7 +295,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bDescriptorSubtype      1 (HEADER)
      * bcdADC               2.00
      * bCategory               3
-     * wTotalLength       0x003c
+     * wTotalLength       0x0061
      * bmControls           0x00
      */
     USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH,   /* Size of the descriptor, in bytes  */
@@ -289,7 +304,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x00U,
     0x02U, /* Audio Device compliant to the USB Audio specification version 2.00  */
     0x03U, /* MICROPHONE(0x03) : Indicating the primary use of this audio function   */
-    0x3CU,
+    0x61U,
     0x00U, /* Total number of bytes returned for the class-specific AudioControl interface descriptor. Includes
               the combined length of this descriptor header and all Unit and Terminal descriptors.   */
     0x00U, /* D1..0: Latency Control  */
@@ -311,6 +326,33 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,                 /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT, /* CLOCK_SOURCE descriptor subtype  */
     USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* Constant uniquely identifying the Clock Source Entity within
+                                                          the audio funcion */
+    0x01U,                                             /* D1..0: 01: Internal Fixed Clock
+                                                          D2: 0 Clock is not synchronized to SOF
+                                                          D7..3: Reserved, should set to 0   */
+    0x07U, /* D1..0: Clock Frequency Control is present and Host programmable
+              D3..2: Clock Validity Control is present but read-only
+              D7..4: Reserved, should set to 0 */
+    0x00U, /* This Clock Source has no association   */
+    0x02U, /* Index of a string descriptor, describing the Clock Source Entity  */
+
+    /**
+     * AudioControl Interface Descriptor:
+     * bLength                 8
+     * bDescriptorType        36
+     * bDescriptorSubtype     10 (CLOCK_SOURCE)
+     * bClockID               17
+     * bmAttributes            1 Internal fixed clock
+     * bmControls           0x07
+     *   Clock Frequency Control (read/write)
+     *   Clock Validity Control (read-only)
+     * bAssocTerminal          0
+     * iClockSource            2
+     */
+    0x08U,                                                  /* Size of the descriptor, in bytes  */
+    USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,                 /* CS_INTERFACE Descriptor Type  */
+    USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT, /* CLOCK_SOURCE descriptor subtype  */
+    USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* Constant uniquely identifying the Clock Source Entity within
                                                           the audio funcion */
     0x01U,                                             /* D1..0: 01: Internal Fixed Clock
                                                           D2: 0 Clock is not synchronized to SOF
@@ -345,6 +387,47 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x02U, /* A generic microphone that does not fit under any of the other classifications.  */
     0x00U, /* This Input Terminal has no association   */
     USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Input Terminal is
+                                                          connected.  */
+    0x10U, /* This Terminal's output audio channel cluster has 16 logical output channels   */
+    0x00U,
+    0x00U,
+    0x00U,
+    0x00U, /* Describes the spatial location of the logical channels:: Mono, no spatial location */
+    0x00U, /* Index of a string descriptor, describing the name of the first logical channel.  */
+    0x00U,
+    0x00U, /* bmControls D1..0: Copy Protect Control is not present
+              D3..2: Connector Control is not present
+              D5..4: Overload Control is not present
+              D7..6: Cluster Control is not present
+              D9..8: Underflow Control is not present
+              D11..10: Overflow Control is not present
+              D15..12: Reserved, should set to 0*/
+    0x02U, /* Index of a string descriptor, describing the Input Terminal.  */
+
+    /**
+     * AudioControl Interface Descriptor:
+     * bLength                17
+     * bDescriptorType        36
+     * bDescriptorSubtype      2 (INPUT_TERMINAL)
+     * bTerminalID             4
+     * wTerminalType      0x0101 (USB Streaming)
+     * bAssocTerminal          0
+     * bCSourceID             17
+     * bNrChannels            16
+     * bmChannelConfig    0x00000000
+     * iChannelNames           0
+     * bmControls         0x0000
+     * iTerminal               2
+     */
+    0x11U,                                               /* Size of the descriptor, in bytes  */
+    USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,              /* CS_INTERFACE Descriptor Type   */
+    USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL, /* INPUT_TERMINAL descriptor subtype   */
+    USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
+                     function. This value is used in all requests        to address this Terminal.   */
+    0x01U,
+    0x01U, /* USB Streaming.  */
+    0x00U, /* This Input Terminal has no association   */
+    USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Input Terminal is
                                                           connected.  */
     0x10U, /* This Terminal's output audio channel cluster has 16 logical output channels   */
     0x00U,
@@ -425,6 +508,39 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x00U, /* This Output Terminal has no association  */
     USB_AUDIO_RECORDER_CONTROL_FEATURE_UNIT_ID, /* ID of the Unit or Terminal to which this Terminal is connected.  */
     USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Output Terminal is
+                                                          connected  */
+    0x00U,
+    0x00U, /* bmControls:   D1..0: Copy Protect Control is not present
+              D3..2: Connector Control is not present
+              D5..4: Overload Control is not present
+              D7..6: Underflow Control is not present
+              D9..8: Overflow Control is not present
+              D15..10: Reserved, should set to 0   */
+    0x00U, /* Index of a string descriptor, describing the Output Terminal.  */
+
+    /**
+     * AudioControl Interface Descriptor:
+     * bLength                12
+     * bDescriptorType        36
+     * bDescriptorSubtype      3 (OUTPUT_TERMINAL)
+     * bTerminalID             6
+     * wTerminalType      0x0301 Speaker
+     * bAssocTerminal          0
+     * bSourceID               4
+     * bCSourceID             17
+     * bmControls         0x0000
+     * iTerminal               0
+     */
+    0x0CU,                                                /* Size of the descriptor, in bytes   */
+    USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,               /* CS_INTERFACE Descriptor Type  */
+    USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL, /* OUTPUT_TERMINAL descriptor subtype   */
+    USB_AUDIO_PLAYER_CONTROL_OUTPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
+                     function. This value is used in all requests        to address this Terminal.   */
+    0x01U,
+    0x03U, /* Speaker */
+    0x00U, /* This Output Terminal has no association  */
+    USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID, /* ID of the Unit or Terminal to which this Terminal is connected.  */
+    USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Output Terminal is
                                                           connected  */
     0x00U,
     0x00U, /* bmControls:   D1..0: Copy Protect Control is not present
