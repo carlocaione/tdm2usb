@@ -730,7 +730,7 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                         error                                                        = kStatus_USB_Success;
                     }
                 }
-                else if (USB_AUDIO_STREAM_INTERFACE_INDEX == interface)
+                else if (USB_AUDIO_STREAM_IN_INTERFACE_INDEX == interface)
                 {
                     if (alternateSetting < USB_AUDIO_GENERATOR_STREAM_INTERFACE_ALTERNATE_COUNT)
                     {
