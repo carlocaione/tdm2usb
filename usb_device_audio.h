@@ -379,6 +379,12 @@
 #define USB_DEVICE_AUDIO_GET_REQUEST_ENDPOINT  (0xA2U)
 /*! @}*/
 
+#define USB_AUDIO_INTERFACE_STREAM_IN    (0U)
+#define USB_AUDIO_INTERFACE_STREAM_OUT   (1U)
+#define USB_AUDIO_INTERFACE_CONTROL      (2U)
+
+#define USB_AUDIO_INTERFACE_STREAM_COUNT (2U)
+
 /*! @brief Available common EVENT types in audio class callback */
 typedef enum
 {
@@ -422,14 +428,13 @@ typedef struct _usb_device_audio_struct
     usb_device_handle handle;                              /*!< The device handle */
     usb_device_class_config_struct_t *configStruct;        /*!< The configuration of the class. */
     usb_device_interface_struct_t *controlInterfaceHandle; /*!< Current control interface handle */
-    usb_device_interface_struct_t *streamInterfaceHandle;  /*!< Current stream interface handle */
+    usb_device_interface_struct_t *streamInterfaceHandle[USB_AUDIO_INTERFACE_STREAM_COUNT];  /*!< Current stream interface handle */
     uint8_t configuration;                                 /*!< Current configuration */
     uint8_t controlInterfaceNumber;                        /*!< The control interface number of the class */
     uint8_t controlAlternate;                              /*!< Current alternate setting of the control interface */
-    uint8_t streamInterfaceNumber;                         /*!< The stream interface number of the class */
-    uint8_t streamAlternate;                               /*!< Current alternate setting of the stream interface */
-    uint8_t streamInPipeBusy;                              /*!< Stream IN pipe busy flag */
-    uint8_t streamOutPipeBusy;                             /*!< Stream OUT pipe busy flag */
+    uint8_t streamInterfaceNumber[USB_AUDIO_INTERFACE_STREAM_COUNT];                         /*!< The stream interface number of the class */
+    uint8_t streamAlternate[USB_AUDIO_INTERFACE_STREAM_COUNT];                               /*!< Current alternate setting of the stream interface */
+    uint8_t streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_COUNT];                              /*!< Stream IN pipe busy flag */
 } usb_device_audio_struct_t;
 
 STRUCT_PACKED

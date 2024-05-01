@@ -5,8 +5,8 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#ifndef __USB_AUDIO_GENERATOR_H__
-#define __USB_AUDIO_GENERATOR_H__ 1
+#ifndef __USB_AUDIO_H__
+#define __USB_AUDIO_H__ 1
 
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -106,7 +106,7 @@ typedef struct _usb_audio_generator_struct
     usb_device_control_range_layout3_struct_t freqControlRange;
     usb_device_control_range_layout2_struct_t volumeControlRange;
     uint8_t currentConfiguration;
-    uint8_t currentInterfaceAlternateSetting[USB_AUDIO_GENERATOR_INTERFACE_COUNT];
+    uint8_t currentInterfaceAlternateSetting[USB_AUDIO_INTERFACE_COUNT];
     uint8_t speed;
     uint8_t attach;
 #if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
@@ -120,4 +120,4 @@ typedef struct _usb_audio_generator_struct
 #endif
 } usb_audio_generator_struct_t;
 
-#endif /* __USB_AUDIO_GENERATOR_H__ */
+#endif /* __USB_AUDIO_H__ */
