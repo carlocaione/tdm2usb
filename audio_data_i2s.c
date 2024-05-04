@@ -57,10 +57,13 @@ static dma_priority_t i2s_dma_prio[] = {
     I2S_1_DMA_CH_PRIO,
 };
 
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuff[USB_MAX_PACKET_SIZE];
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuffIn[USB_MAX_PACKET_SIZE];
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t s_wavBuffOut[USB_MAX_PACKET_SIZE];
 
 SDK_ALIGN(static dma_descriptor_t s_rxDmaDescriptors[I2S_INST_NUM][I2S_BUFF_NUM], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
-SDK_ALIGN(static uint8_t s_i2sBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
+
+SDK_ALIGN(static uint8_t s_i2sBuffIn[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
+SDK_ALIGN(static uint8_t s_i2sBuffOut[USB_MAX_PACKET_SIZE], sizeof(uint32_t));
 
 static i2s_transfer_t s_rxTransfer[I2S_INST_NUM][I2S_BUFF_NUM];
 static i2s_dma_handle_t s_RxHandle[I2S_INST_NUM];
@@ -72,6 +75,17 @@ volatile unsigned int first_int = 0;
 /*******************************************************************************
  * Code
  ******************************************************************************/
+/*!
+ * @brief todo
+ */
+void USB_AudioRecorderSetBuffer(uint8_t *buffer, uint32_t size)
+{
+    memcpy(s_i2sBuffOut, s_wavBuffOut, size);
+    if (buffer[0] != 0 || buffer[1] != 0 || buffer[2] != 0 || buffer[3] != 0) {
+        while(1);
+    }
+}
+
 /*!
  * @brief Audio wav data prepare function.
  *
@@ -88,14 +102,14 @@ void USB_AudioRecorderGetBuffer(uint8_t *buffer, uint32_t size)
             uint32_t *pos = &s_audioPosition[inst];
 #if USE_FILTER_32_DOWN
             uint32_t *p_buffer = (uint32_t *) (buffer + k);
-            uint32_t *p_i2s_buffer = (uint32_t *) &s_i2sBuff[inst][*pos];
+            uint32_t *p_i2s_buffer = (uint32_t *) &s_i2sBuffIn[inst][*pos];
 
             for (size_t ch = 0; ch < I2S_CH_NUM_PER_INST; ch++)
             {
                 p_buffer[ch + (inst * I2S_CH_NUM_PER_INST)] = p_i2s_buffer[ch] & FILTER_32;
             }
 #else
-            memcpy(buffer + k + (inst * I2S_FRAME_LEN_PER_INST), &s_i2sBuff[inst][*pos], I2S_FRAME_LEN_PER_INST);
+            memcpy(buffer + k + (inst * I2S_FRAME_LEN_PER_INST), &s_i2sBuffIn[inst][*pos], I2S_FRAME_LEN_PER_INST);
 #endif
             *pos = (*pos + I2S_FRAME_LEN_PER_INST) % (I2S_BUFF_SIZE * I2S_BUFF_NUM);
         }
@@ -198,7 +212,7 @@ static void I2S_DMA_Setup(size_t inst, i2s_config_t *config)
     i2s_dma_handle_t *i2s_dma_handle = &s_RxHandle[inst];
     i2s_transfer_t *i2s_transfer = s_rxTransfer[inst];
     dma_handle_t *dma_handle = &s_DmaRxHandle[inst];
-    uint8_t *i2s_buff = s_i2sBuff[inst];
+    uint8_t *i2s_buff = s_i2sBuffIn[inst];
     I2S_Type *i2s_base = i2s[inst];
 
     for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
