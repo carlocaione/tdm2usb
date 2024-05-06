@@ -94,6 +94,7 @@ typedef struct _usb_device_interface_struct
  */
 typedef struct _usb_device_interfaces_struct
 {
+    uint8_t type;
     uint8_t classCode;                        /*!< Class code of the interface*/
     uint8_t subclassCode;                     /*!< Subclass code of the interface*/
     uint8_t protocolCode;                     /*!< Protocol code of the interface*/

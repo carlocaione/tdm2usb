@@ -130,6 +130,11 @@
 #define USB_AUDIO_RECORDER_CONTROL_OUTPUT_TERMINAL_ID (0x03U)
 #define USB_AUDIO_PLAYER_CONTROL_OUTPUT_TERMINAL_ID (0x06U)
 
+#define CC_IN (0)
+#define CC_OUT (1)
+#define CC_IN_OUT (2)
+#define CC_CONTROL (3)
+
 /*******************************************************************************
  * API
  ******************************************************************************/

@@ -156,6 +156,7 @@ usb_device_interface_struct_t g_UsbDeviceAudioStreamOutInterface[] = {
 /* Define interfaces for audio generator */
 usb_device_interfaces_struct_t g_UsbDeviceAudioInterfaces[USB_AUDIO_GENERATOR_INTERFACE_COUNT] = {
     {
+        CC_CONTROL,
         USB_AUDIO_CLASS,                   /* Audio class code */
         USB_SUBCLASS_AUDIOCONTROL,         /* Audio control subclass code */
         USB_AUDIO_PROTOCOL,                /* Audio protocol code */
@@ -164,6 +165,7 @@ usb_device_interfaces_struct_t g_UsbDeviceAudioInterfaces[USB_AUDIO_GENERATOR_IN
         sizeof(g_UsbDeviceAudioControInterface) / sizeof(usb_device_interface_struct_t),
     },
     {
+        CC_IN,
         USB_AUDIO_CLASS,                  /* Audio class code */
         USB_SUBCLASS_AUDIOSTREAM,         /* Audio stream subclass code */
         USB_AUDIO_PROTOCOL,               /* Audio protocol code */
@@ -172,6 +174,7 @@ usb_device_interfaces_struct_t g_UsbDeviceAudioInterfaces[USB_AUDIO_GENERATOR_IN
         sizeof(g_UsbDeviceAudioStreamInInterface) / sizeof(usb_device_interface_struct_t),
     },
     {
+        CC_OUT,
         USB_AUDIO_CLASS,                  /* Audio class code */
         USB_SUBCLASS_AUDIOSTREAM,         /* Audio stream subclass code */
         USB_AUDIO_PROTOCOL,               /* Audio protocol code */
