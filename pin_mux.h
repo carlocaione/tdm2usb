@@ -59,6 +59,13 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_I2S_SDIN_SIGNAL RXD_SDA_MOSI_DATA          /*!<@brief Signal name */
                                                                   /* @} */
 
+/*! @name FC4_RXD_SDA_MOSI_DATA (coord C11), I2S_SDOUT
+  @{ */
+/* Routed pin properties */
+#define BOARD_INITPINS_I2S_SDOUT_PERIPHERAL FLEXCOMM4               /*!<@brief Peripheral name */
+#define BOARD_INITPINS_I2S_SDOUT_SIGNAL RXD_SDA_MOSI_DATA           /*!<@brief Signal name */
+                                                                    /* @} */
+
 /*!
  * @brief Configures pin routing and optionally pin electrical features.
  *

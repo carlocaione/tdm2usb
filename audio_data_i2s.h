@@ -35,7 +35,7 @@
 /**
  * DMA controller.
  */
-#define DMA_RX (DMA0)
+#define DMA (DMA0)
 
 /**
  * USB max packet size. We default to High-Speed [384 bytes]
@@ -45,26 +45,35 @@
 /**
  * I2S HW controllers.
  */
-#define I2S_0 (I2S5)
-#define I2S_1 (I2S4)
+#define I2S_RX_0 (I2S5) /* FLEXCOMM5 */
+#define I2S_RX_1 (I2S7) /* FLEXCOMM7 */
+
+#define I2S_TX_0 (I2S4) /* FLEXCOMM4 */
+#define I2S_TX_1 (I2S6) /* FLEXCOMM6 */
 
 /**
  * I2S DMA channels.
  */
-#define I2S_0_DMA_CH (10)
-#define I2S_1_DMA_CH (8)
+#define I2S_RX_0_DMA_CH (10) /* Flexcomm Interface 5 RX */
+#define I2S_RX_1_DMA_CH (14) /* Flexcomm Interface 7 RX */
+
+#define I2S_TX_0_DMA_CH (9)  /* Flexcomm Interface 4 TX */
+#define I2S_TX_1_DMA_CH (13) /* Flexcomm Interface 6 TX */
 
 /**
  * Number of I2S instances. Each I2S instance (controller) supports at maximum 8
  * channels, so we need 2 instances for 16-channels [2 instances]
  */
-#define I2S_INST_NUM (ARRAY_SIZE(i2s))
+#define I2S_INST_NUM (ARRAY_SIZE(s_i2sRxBase))
 
 /**
  * I2S DMA chennels priority.
  */
-#define I2S_0_DMA_CH_PRIO (kDMA_ChannelPriority2)
-#define I2S_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
+#define I2S_RX_0_DMA_CH_PRIO (kDMA_ChannelPriority2)
+#define I2S_RX_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
+
+#define I2S_TX_0_DMA_CH_PRIO (kDMA_ChannelPriority2)
+#define I2S_TX_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
 
 /**
  * Number of buffers for I2S DMA ping-pong [2]

@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding= "UTF-8" ?>
-<configuration name="" xsi:schemaLocation="http://mcuxpresso.nxp.com/XSD/mex_configuration_15 http://mcuxpresso.nxp.com/XSD/mex_configuration_15.xsd" uuid="790ecc90-aa1b-4ce2-8dee-7319f1422b67" version="15" xmlns="http://mcuxpresso.nxp.com/XSD/mex_configuration_15" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<configuration name="" xsi:schemaLocation="http://mcuxpresso.nxp.com/XSD/mex_configuration_15 http://mcuxpresso.nxp.com/XSD/mex_configuration_15.xsd" uuid="28ef387f-4b16-416c-b9a8-e9fb62d352df" version="15" xmlns="http://mcuxpresso.nxp.com/XSD/mex_configuration_15" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
    <common>
       <processor>MIMXRT685S</processor>
       <package>MIMXRT685SFVKB</package>
+      <board>EVK-MIMXRT685</board>
+      <kit></kit>
       <mcu_data>ksdk2_0</mcu_data>
       <cores selected="cm33">
          <core name="Cortex-M33" id="cm33" description=""/>
@@ -24,7 +26,13 @@
                <pin_label pin_num="G16" pin_signal="PIO1_3/FC5_SCK" label="I2S_CLK" identifier="I2SCLK;I2S_CLK"/>
                <pin_label pin_num="G17" pin_signal="PIO1_4/FC5_TXD_SCL_MISO_WS" label="I2S_FYNC" identifier="I2SFSYNC;I2S_FSYNC"/>
                <pin_label pin_num="J16" pin_signal="PIO1_5/FC5_RXD_SDA_MOSI_DATA" label="I2S_SDIN" identifier="I2S_SDIN"/>
+               <pin_label pin_num="B10" pin_signal="PIO0_29/FC4_TXD_SCL_MISO_WS/CTIMER4_MAT1/I2S_BRIDGE_WS_OUT/SEC_PIO0_29" label="I2S_SDOUT" identifier="I2S_SDOUT"/>
+               <pin_label pin_num="C11" pin_signal="PIO0_30/FC4_RXD_SDA_MOSI_DATA/CTIMER4_MAT2/I2S_BRIDGE_DATA_OUT/SEC_PIO0_30" label="I2S_SDOUT" identifier="I2S_SDOUT"/>
             </pin_labels>
+            <external_user_signals>
+               <routingDetailsColumns/>
+               <properties/>
+            </external_user_signals>
          </pins_profile>
          <functions_list>
             <function name="BOARD_InitPins">
@@ -104,6 +112,11 @@
                         <pin_feature name="direction" value="INPUT"/>
                         <pin_feature name="ibena" value="enabled"/>
                         <pin_feature name="drive" value="normal"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM4" signal="RXD_SDA_MOSI_DATA" pin_num="C11" pin_signal="PIO0_30/FC4_RXD_SDA_MOSI_DATA/CTIMER4_MAT2/I2S_BRIDGE_DATA_OUT/SEC_PIO0_30">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
                      </pin_features>
                   </pin>
                </pins>

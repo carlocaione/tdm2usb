@@ -12,10 +12,13 @@ processor: MIMXRT685S
 package_id: MIMXRT685SFVKB
 mcu_data: ksdk2_0
 processor_version: 15.0.1
+external_user_signals: {}
 pin_labels:
 - {pin_num: G16, pin_signal: PIO1_3/FC5_SCK, label: I2S_CLK, identifier: I2SCLK;I2S_CLK}
 - {pin_num: G17, pin_signal: PIO1_4/FC5_TXD_SCL_MISO_WS, label: I2S_FYNC, identifier: I2SFSYNC;I2S_FSYNC}
 - {pin_num: J16, pin_signal: PIO1_5/FC5_RXD_SDA_MOSI_DATA, label: I2S_SDIN, identifier: I2S_SDIN}
+- {pin_num: B10, pin_signal: PIO0_29/FC4_TXD_SCL_MISO_WS/CTIMER4_MAT1/I2S_BRIDGE_WS_OUT/SEC_PIO0_29, label: I2S_SDOUT, identifier: I2S_SDOUT}
+- {pin_num: C11, pin_signal: PIO0_30/FC4_RXD_SDA_MOSI_DATA/CTIMER4_MAT2/I2S_BRIDGE_DATA_OUT/SEC_PIO0_30, label: I2S_SDOUT, identifier: I2S_SDOUT}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -51,6 +54,7 @@ BOARD_InitPins:
   - {pin_num: G17, peripheral: FLEXCOMM5, signal: TXD_SCL_MISO_WS, pin_signal: PIO1_4/FC5_TXD_SCL_MISO_WS, identifier: I2S_FSYNC, direction: INPUT, ibena: enabled,
     drive: normal}
   - {pin_num: J16, peripheral: FLEXCOMM5, signal: RXD_SDA_MOSI_DATA, pin_signal: PIO1_5/FC5_RXD_SDA_MOSI_DATA, direction: INPUT, ibena: enabled, drive: normal}
+  - {pin_num: C11, peripheral: FLEXCOMM4, signal: RXD_SDA_MOSI_DATA, pin_signal: PIO0_30/FC4_RXD_SDA_MOSI_DATA/CTIMER4_MAT2/I2S_BRIDGE_DATA_OUT/SEC_PIO0_30, direction: OUTPUT}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -106,6 +110,27 @@ void BOARD_InitPins(void)
                                         IOPCTL_PIO_INV_DI);
     /* PORT0 PIN2 (coords: G4) is configured as FC0_RXD_SDA_MOSI_DATA */
     IOPCTL_PinMuxSet(IOPCTL, 0U, 2U, port0_pin2_config);
+
+    const uint32_t port0_pin30_config = (/* Pin is configured as FC4_RXD_SDA_MOSI_DATA */
+                                         IOPCTL_PIO_FUNC1 |
+                                         /* Disable pull-up / pull-down function */
+                                         IOPCTL_PIO_PUPD_DI |
+                                         /* Enable pull-down function */
+                                         IOPCTL_PIO_PULLDOWN_EN |
+                                         /* Disable input buffer function */
+                                         IOPCTL_PIO_INBUF_DI |
+                                         /* Normal mode */
+                                         IOPCTL_PIO_SLEW_RATE_NORMAL |
+                                         /* Normal drive */
+                                         IOPCTL_PIO_FULLDRIVE_DI |
+                                         /* Analog mux is disabled */
+                                         IOPCTL_PIO_ANAMUX_DI |
+                                         /* Pseudo Output Drain is disabled */
+                                         IOPCTL_PIO_PSEDRAIN_DI |
+                                         /* Input function is not inverted */
+                                         IOPCTL_PIO_INV_DI);
+    /* PORT0 PIN30 (coords: C11) is configured as FC4_RXD_SDA_MOSI_DATA */
+    IOPCTL_PinMuxSet(IOPCTL, 0U, 30U, port0_pin30_config);
 
     const uint32_t port1_pin3_config = (/* Pin is configured as FC5_SCK */
                                         IOPCTL_PIO_FUNC1 |
