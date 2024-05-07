@@ -42,6 +42,10 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_usbBuffIn[USB_MAX_PACKET_SIZE];
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_usbBuffOut[USB_MAX_PACKET_SIZE];
+
+/* RX */
 static I2S_Type *s_i2sRxBase[] = {
     I2S_RX_0,
     I2S_RX_1,
@@ -57,9 +61,6 @@ static dma_priority_t s_i2sRxDmaPrio[] = {
     I2S_RX_1_DMA_CH_PRIO,
 };
 
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_usbBuffIn[USB_MAX_PACKET_SIZE];
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_usbBuffOut[USB_MAX_PACKET_SIZE];
-
 SDK_ALIGN(static dma_descriptor_t s_dmaRxDesc[I2S_INST_NUM][I2S_BUFF_NUM], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
 SDK_ALIGN(static uint8_t s_i2sRxBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
 
@@ -69,6 +70,32 @@ static dma_handle_t s_dmaRxHandle[I2S_INST_NUM];
 static uint32_t s_rxAudioPos[I2S_INST_NUM];
 
 volatile unsigned int g_rxFirstInt = 0;
+
+/* TX */
+static I2S_Type *s_i2sTxBase[] = {
+    I2S_TX_0,
+    I2S_TX_1,
+};
+
+static uint32_t s_i2sTxDmaChannel[] = {
+    I2S_TX_0_DMA_CH,
+    I2S_TX_1_DMA_CH,
+};
+
+static dma_priority_t s_i2sTxDmaPrio[] = {
+    I2S_TX_0_DMA_CH_PRIO,
+    I2S_TX_1_DMA_CH_PRIO,
+};
+
+SDK_ALIGN(static dma_descriptor_t s_dmaTxDesc[I2S_INST_NUM][I2S_BUFF_NUM], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
+SDK_ALIGN(static uint8_t s_i2sTxBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
+
+static i2s_transfer_t s_i2sTxTransfer[I2S_INST_NUM][I2S_BUFF_NUM];
+static i2s_dma_handle_t s_i2sDmaTxHandle[I2S_INST_NUM];
+static dma_handle_t s_dmaTxHandle[I2S_INST_NUM];
+static uint32_t s_txAudioPos[I2S_INST_NUM];
+
+volatile unsigned int g_txFirstInt = 0;
 
 /*******************************************************************************
  * Code
@@ -111,11 +138,19 @@ void USB_AudioRecorderGetBuffer(uint8_t *usbBuffer, uint32_t size)
 }
 
 /*!
+ * @brief I2S TX callback.
+ */
+static void I2S_TxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
+{
+    __NOP();
+}
+
+/*!
  * @brief I2S RX callback.
  *
  * This function is called when at least one of the ping-pong buffers is full.
  */
-static void RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
+static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
 {
     if (g_rxFirstInt == 0)
     {
@@ -133,7 +168,7 @@ static void RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t comple
  *
  * Function to setup the I2S parameters.
  */
-static void I2S_SetupParams(i2s_config_t *config)
+static void I2S_SetupParams(i2s_config_t *rxConfig, i2s_config_t *txConfig)
 {
     /**
      * Default values:
@@ -153,12 +188,37 @@ static void I2S_SetupParams(i2s_config_t *config)
      *   config->txEmptyZero = false;
      *   config->pack48 = false;
      */
-    I2S_RxGetDefaultConfig(config);
+    I2S_RxGetDefaultConfig(rxConfig);
 
-    config->masterSlave = kI2S_MasterSlaveNormalSlave; /** Normal Slave */
-    config->mode = kI2S_ModeDspWsShort; /** DSP mode, WS having one clock long pulse */
-    config->dataLength = TO_BITS(I2S_CH_LEN_DATA);
-    config->frameLength = TO_BITS(I2S_FRAME_LEN);
+    rxConfig->masterSlave = kI2S_MasterSlaveNormalSlave; /** Normal Slave */
+    rxConfig->mode = kI2S_ModeDspWsShort; /** DSP mode, WS having one clock long pulse */
+    rxConfig->dataLength = TO_BITS(I2S_CH_LEN_DATA);
+    rxConfig->frameLength = TO_BITS(I2S_FRAME_LEN);
+
+    /**
+     * Default values:
+     *   config->masterSlave = kI2S_MasterSlaveNormalSlave;
+     *   config->mode = kI2S_ModeI2sClassic;
+     *   config->rightLow = false;
+     *   config->leftJust = false;
+     *   config->pdmData = false;
+     *   config->sckPol = false;
+     *   config->wsPol = false;
+     *   config->divider = 1;
+     *   config->oneChannel = false;
+     *   config->dataLength = 16;
+     *   config->frameLength = 32;
+     *   config->position = 0;
+     *   config->watermark = 4;
+     *   config->txEmptyZero = true;
+     *   config->pack48 = false;
+     */
+    I2S_TxGetDefaultConfig(txConfig);
+
+    txConfig->masterSlave = kI2S_MasterSlaveNormalSlave; /** Normal Slave */
+    txConfig->mode = kI2S_ModeDspWsShort; /** DSP mode, WS having one clock long pulse */
+    txConfig->dataLength = TO_BITS(I2S_CH_LEN_DATA);
+    txConfig->frameLength = TO_BITS(I2S_FRAME_LEN);
 }
 
 /*!
@@ -170,15 +230,27 @@ static void I2S_SetupParams(i2s_config_t *config)
  */
 static void I2S_SetupSharedSignals(void)
 {
-    /* FLEXCOMM5 sharing SCK, WS and SDIN */
+    /* [RX] FLEXCOMM5 sharing SCK, WS and SDIN */
     I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet0, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_Flexcomm5);
     I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet0, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_Flexcomm5);
     I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet0, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_Flexcomm5);
 
-    /* FLEXCOMM7 getting SCK, WS and SDIN from FLEXCOMM5 */
+    /* [RX] FLEXCOMM7 getting SCK, WS and SDIN from FLEXCOMM5 */
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm7, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_ShareSet0);
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm7, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm7, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_ShareSet0);
+
+    /* [TX] FLEXCOMM4 sharing SDOUT */
+    I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet1, kI2S_BRIDGE_SignalDataOut, kI2S_BRIDGE_Flexcomm4);
+
+    /* [TX] FLEXCOMM4 getting SCK and WS from FLEXCOMM5 */
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_ShareSet0);
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
+
+    /* [TX] FLEXCOMM6 getting SCK and WS from FLEXCOMM5 and sharing SDOUT with FLEXCOMM4 */
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm6, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_ShareSet0);
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm6, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm6, kI2S_BRIDGE_SignalDataOut, kI2S_BRIDGE_ShareSet1);
 }
 
 /*!
@@ -186,15 +258,23 @@ static void I2S_SetupSharedSignals(void)
  *
  * Function to setup the DMA channels (one for each I2S instance).
  */
-static void DMA_SetupChannels(size_t inst)
+static void DMA_SetupChannels(void)
 {
-    dma_handle_t *dmaHandle = &s_dmaRxHandle[inst];
-    dma_priority_t dmaPrio = s_i2sRxDmaPrio[inst];
-    uint32_t dmaChannel = s_i2sRxDmaChannel[inst];
+    /* RX */
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        DMA_EnableChannel(DMA, s_i2sRxDmaChannel[inst]);
+        DMA_SetChannelPriority(DMA, s_i2sRxDmaChannel[inst], s_i2sRxDmaPrio[inst]);
+        DMA_CreateHandle(&s_dmaRxHandle[inst], DMA, s_i2sRxDmaChannel[inst]);
+    }
 
-    DMA_EnableChannel(DMA_RX, dmaChannel);
-    DMA_SetChannelPriority(DMA_RX, dmaChannel, dmaPrio);
-    DMA_CreateHandle(dmaHandle, DMA_RX, dmaChannel);
+    /* TX */
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        DMA_EnableChannel(DMA, s_i2sTxDmaChannel[inst]);
+        DMA_SetChannelPriority(DMA, s_i2sTxDmaChannel[inst], s_i2sTxDmaPrio[inst]);
+        DMA_CreateHandle(&s_dmaTxHandle[inst], DMA, s_i2sTxDmaChannel[inst]);
+    }
 }
 
 /*!
@@ -202,47 +282,48 @@ static void DMA_SetupChannels(size_t inst)
  *
  * Function to setup I2S (with secondary channels) and DMA.
  */
-static void I2S_DMA_Setup(size_t inst, i2s_config_t *config)
+static void I2S_DMA_Setup(i2s_config_t *rxConfig, i2s_config_t *txConfig)
 {
-    dma_descriptor_t *dmaDescriptor = s_dmaRxDesc[inst];
-    i2s_dma_handle_t *i2sDmaHandle = &s_i2sDmaRxHandle[inst];
-    i2s_transfer_t *i2sTransfer = s_i2sRxTransfer[inst];
-    dma_handle_t *dmaHandle = &s_dmaRxHandle[inst];
-    uint8_t *i2sBuff = s_i2sRxBuff[inst];
-    I2S_Type *i2sBase = s_i2sRxBase[inst];
-
-    for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
+    /* RX */
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++) 
     {
-        i2sTransfer[buf].data = &i2sBuff[buf * I2S_BUFF_SIZE];
-        i2sTransfer[buf].dataSize = I2S_BUFF_SIZE;
+        for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
+        {
+            s_i2sRxTransfer[inst][buf].data = &s_i2sRxBuff[inst][buf * I2S_BUFF_SIZE];
+            s_i2sRxTransfer[inst][buf].dataSize = I2S_BUFF_SIZE;
+        }
+
+        rxConfig->position = (inst * TO_BITS(I2S_FRAME_LEN_PER_INST));
+
+        I2S_RxInit(s_i2sRxBase[inst], rxConfig);
+
+        I2S_EnableSecondaryChannel(s_i2sRxBase[inst], kI2S_SecondaryChannel1, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 1));
+        I2S_EnableSecondaryChannel(s_i2sRxBase[inst], kI2S_SecondaryChannel2, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 2));
+        I2S_EnableSecondaryChannel(s_i2sRxBase[inst], kI2S_SecondaryChannel3, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 3));
+
+        I2S_RxTransferCreateHandleDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], &s_dmaRxHandle[inst], I2S_RxCallback, (void *) s_i2sRxTransfer[inst]);
+        I2S_TransferInstallLoopDMADescriptorMemory(&s_i2sDmaRxHandle[inst], s_dmaRxDesc[inst], I2S_BUFF_NUM);
     }
 
-    config->position = (inst * TO_BITS(I2S_FRAME_LEN_PER_INST));
-
-    I2S_RxInit(i2sBase, config);
-
-    I2S_EnableSecondaryChannel(i2sBase, kI2S_SecondaryChannel1, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 1));
-    I2S_EnableSecondaryChannel(i2sBase, kI2S_SecondaryChannel2, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 2));
-    I2S_EnableSecondaryChannel(i2sBase, kI2S_SecondaryChannel3, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 3));
-
-    I2S_RxTransferCreateHandleDMA(i2sBase, i2sDmaHandle, dmaHandle, RxCallback, (void *) i2sTransfer);
-    I2S_TransferInstallLoopDMADescriptorMemory(i2sDmaHandle, dmaDescriptor, I2S_BUFF_NUM);
-}
-
-/*!
- * @brief I2S RX start.
- *
- * Function to start I2S RX. Assert on failure.
- */
-static void I2S_StartRx(size_t inst)
-{
-    i2s_transfer_t *i2sTransfer = s_i2sRxTransfer[inst];
-    i2s_dma_handle_t *i2sDmaHandle = &s_i2sDmaRxHandle[inst];
-    I2S_Type *i2sBase = s_i2sRxBase[inst];
-
-    if (I2S_TransferReceiveLoopDMA(i2sBase, i2sDmaHandle, i2sTransfer, I2S_BUFF_NUM) != kStatus_Success)
+    /* TX */
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++) 
     {
-        assert(false);
+        for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
+        {
+            s_i2sTxTransfer[inst][buf].data = &s_i2sTxBuff[inst][buf * I2S_BUFF_SIZE];
+            s_i2sTxTransfer[inst][buf].dataSize = I2S_BUFF_SIZE;
+        }
+
+        txConfig->position = (inst * TO_BITS(I2S_FRAME_LEN_PER_INST));
+
+        I2S_TxInit(s_i2sTxBase[inst], txConfig);
+
+        I2S_EnableSecondaryChannel(s_i2sTxBase[inst], kI2S_SecondaryChannel1, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 1));
+        I2S_EnableSecondaryChannel(s_i2sTxBase[inst], kI2S_SecondaryChannel2, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 2));
+        I2S_EnableSecondaryChannel(s_i2sTxBase[inst], kI2S_SecondaryChannel3, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 3));
+
+        I2S_TxTransferCreateHandleDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst], &s_dmaTxHandle[inst], I2S_TxCallback, (void *) s_i2sTxTransfer[inst]);
+        I2S_TransferInstallLoopDMADescriptorMemory(&s_i2sDmaTxHandle[inst], s_dmaTxDesc[inst], I2S_BUFF_NUM);
     }
 }
 
@@ -253,20 +334,28 @@ static void I2S_StartRx(size_t inst)
  */
 void BOARD_I2S_Init(void)
 {
-    i2s_config_t config = { 0 };
+    i2s_config_t rxConfig = { 0 };
+    i2s_config_t txConfig = { 0 };
 
     I2S_SetupSharedSignals();
-    I2S_SetupParams(&config);
-    DMA_Init(DMA_RX);
+    I2S_SetupParams(&rxConfig, &txConfig);
+
+    DMA_Init(DMA);
+    DMA_SetupChannels();
+    
+    I2S_DMA_Setup(&rxConfig, &txConfig);
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        DMA_SetupChannels(inst);
-        I2S_DMA_Setup(inst, &config);
+        for (size_t x = 0; x < I2S_BUFF_SIZE; x++)
+        {
+            s_i2sTxBuff[inst][x] = 0xA5;
+        }
     }
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        I2S_StartRx(inst);
+        I2S_TransferReceiveLoopDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst], I2S_BUFF_NUM);
+        I2S_TransferSendLoopDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst], s_i2sTxTransfer[inst], I2S_BUFF_NUM);
     }
 }
