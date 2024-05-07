@@ -176,13 +176,15 @@ static void I2S_SetupParams(i2s_config_t *config)
  */
 static void I2S_SetupSharedSignals(void)
 {
+    /* FLEXCOMM5 sharing SCK, WS and SDIN */
     I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet0, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_Flexcomm5);
     I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet0, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_Flexcomm5);
     I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet0, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_Flexcomm5);
 
-    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_ShareSet0);
-    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
-    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_ShareSet0);
+    /* FLEXCOMM7 getting SCK, WS and SDIN from FLEXCOMM5 */
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm7, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_ShareSet0);
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm7, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm7, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_ShareSet0);
 }
 
 /*!
