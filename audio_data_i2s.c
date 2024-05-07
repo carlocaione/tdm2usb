@@ -78,7 +78,7 @@ volatile unsigned int first_int = 0;
 /*!
  * @brief todo
  */
-void USB_AudioRecorderSetBuffer(uint8_t *buffer, uint32_t size)
+void USB_AudioRecorderPutBuffer(uint8_t *buffer, uint32_t size)
 {
     memcpy(s_i2sBuffOut, s_wavBuffOut, size);
     if (buffer[0] != 0 || buffer[1] != 0 || buffer[2] != 0 || buffer[3] != 0) {
@@ -257,16 +257,16 @@ static void I2S_StartRx(size_t inst)
  */
 void BOARD_I2S_Init(void)
 {
-    i2s_config_t rx_config = { 0 };
+    i2s_config_t config = { 0 };
 
     I2S_SetupSharedSignals();
-    I2S_SetupParams(&rx_config);
+    I2S_SetupParams(&config);
     DMA_Init(DMA_RX);
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
         DMA_SetupChannels(inst);
-        I2S_DMA_Setup(inst, &rx_config);
+        I2S_DMA_Setup(inst, &config);
     }
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
