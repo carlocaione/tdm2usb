@@ -69,8 +69,8 @@ static sctimer_config_t sctimerInfo;
 #endif
 extern usb_audio_generator_struct_t s_audioGenerator;
 /* Audio data information */
-extern uint8_t s_wavBuffIn[];
-extern uint8_t s_wavBuffOut[];
+extern uint8_t g_usbBuffIn[];
+extern uint8_t g_usbBuffOut[];
 
 extern usb_device_class_struct_t g_UsbDeviceAudioClass;
 
@@ -639,10 +639,10 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
                 (ep_cb_param->length == ((USB_SPEED_HIGH == s_audioGenerator.speed) ? HS_ISO_IN_ENDP_PACKET_SIZE :
                                                                                       FS_ISO_IN_ENDP_PACKET_SIZE)))
             {
-                USB_AudioRecorderGetBuffer(s_wavBuffIn, (USB_SPEED_HIGH == s_audioGenerator.speed) ?
+                USB_AudioRecorderGetBuffer(g_usbBuffIn, (USB_SPEED_HIGH == s_audioGenerator.speed) ?
                                                           HS_ISO_IN_ENDP_PACKET_SIZE :
                                                           FS_ISO_IN_ENDP_PACKET_SIZE);
-                error = USB_DeviceAudioSend(handle, USB_AUDIO_STREAM_IN_ENDPOINT, s_wavBuffIn,
+                error = USB_DeviceAudioSend(handle, USB_AUDIO_STREAM_IN_ENDPOINT, g_usbBuffIn,
                                             (USB_SPEED_HIGH == s_audioGenerator.speed) ? HS_ISO_IN_ENDP_PACKET_SIZE :
                                                                                          FS_ISO_IN_ENDP_PACKET_SIZE);
             }
@@ -653,10 +653,10 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
                 (ep_cb_param->length == ((USB_SPEED_HIGH == s_audioGenerator.speed) ? HS_ISO_OUT_ENDP_PACKET_SIZE :
                                                                                       FS_ISO_OUT_ENDP_PACKET_SIZE)))
             {
-                error = USB_DeviceAudioRecv(handle, USB_AUDIO_STREAM_OUT_ENDPOINT, s_wavBuffOut,
+                error = USB_DeviceAudioRecv(handle, USB_AUDIO_STREAM_OUT_ENDPOINT, g_usbBuffOut,
                                             (USB_SPEED_HIGH == s_audioGenerator.speed) ? HS_ISO_OUT_ENDP_PACKET_SIZE :
                                                                                          FS_ISO_OUT_ENDP_PACKET_SIZE);
-                USB_AudioRecorderPutBuffer(s_wavBuffOut, (USB_SPEED_HIGH == s_audioGenerator.speed) ?
+                USB_AudioRecorderPutBuffer(g_usbBuffOut, (USB_SPEED_HIGH == s_audioGenerator.speed) ?
                                                             HS_ISO_OUT_ENDP_PACKET_SIZE :
                                                             FS_ISO_OUT_ENDP_PACKET_SIZE);
 
@@ -755,11 +755,11 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                         error                                                        = kStatus_USB_Success;
                         if (USB_AUDIO_STREAM_INTERFACE_ALTERNATE_1 == alternateSetting)
                         {
-                            USB_AudioRecorderGetBuffer(s_wavBuffIn, (USB_SPEED_HIGH == s_audioGenerator.speed) ?
+                            USB_AudioRecorderGetBuffer(g_usbBuffIn, (USB_SPEED_HIGH == s_audioGenerator.speed) ?
                                                                       HS_ISO_IN_ENDP_PACKET_SIZE :
                                                                       FS_ISO_IN_ENDP_PACKET_SIZE);
                             error = USB_DeviceAudioSend(
-                                s_audioGenerator.audioHandle, USB_AUDIO_STREAM_IN_ENDPOINT, s_wavBuffIn,
+                                s_audioGenerator.audioHandle, USB_AUDIO_STREAM_IN_ENDPOINT, g_usbBuffIn,
                                 (USB_SPEED_HIGH == s_audioGenerator.speed) ? HS_ISO_IN_ENDP_PACKET_SIZE :
                                                                              FS_ISO_IN_ENDP_PACKET_SIZE);
                         }
@@ -774,10 +774,10 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                         if (USB_AUDIO_STREAM_INTERFACE_ALTERNATE_1 == alternateSetting)
                         {
                             error = USB_DeviceAudioRecv(
-                                s_audioGenerator.audioHandle, USB_AUDIO_STREAM_OUT_ENDPOINT, s_wavBuffOut,
+                                s_audioGenerator.audioHandle, USB_AUDIO_STREAM_OUT_ENDPOINT, g_usbBuffOut,
                                 (USB_SPEED_HIGH == s_audioGenerator.speed) ? HS_ISO_OUT_ENDP_PACKET_SIZE :
                                                                              FS_ISO_OUT_ENDP_PACKET_SIZE);
-                            USB_AudioRecorderPutBuffer(s_wavBuffOut, (USB_SPEED_HIGH == s_audioGenerator.speed) ?
+                            USB_AudioRecorderPutBuffer(g_usbBuffOut, (USB_SPEED_HIGH == s_audioGenerator.speed) ?
                                                                         HS_ISO_OUT_ENDP_PACKET_SIZE :
                                                                         FS_ISO_OUT_ENDP_PACKET_SIZE);
 
