@@ -29,14 +29,14 @@
 #define CH_OFF(off, n) (TO_BITS(off) + (TO_BITS(I2S_CH_LEN_PER_PAIR) * (n)))
 
 /**
- * Set USE_RX_FILTER_32_DOWN to (1) (and the FILTER_32 accordingly) when you are
+ * Set USE_FILTER_32_DOWN to (1) (and the FILTER_32 accordingly) when you are
  * retrieving 32-bits per channel from I2S but the useful data is encoded in
  * fewer bits (for example when only 24-bits are actually carrying the real
  * audio information out of 32-bits).
  *
  * Note: this only works with 32-bit channels.
  */
-#define USE_RX_FILTER_32_DOWN (1)
+#define USE_FILTER_32_DOWN (1)
 #define FILTER_32 (0xFFFFFF00)
 
 /*******************************************************************************
@@ -95,16 +95,26 @@ static i2s_dma_handle_t s_i2sDmaTxHandle[I2S_INST_NUM];
 static dma_handle_t s_dmaTxHandle[I2S_INST_NUM];
 static uint32_t s_txAudioPos[I2S_INST_NUM];
 
-volatile unsigned int g_txFirstInt = 0;
-
 /*******************************************************************************
  * Code
  ******************************************************************************/
 /*!
  * @brief todo
  */
-void USB_AudioRecorderPutBuffer(uint8_t *buffer, uint32_t size)
+void USB_AudioRecorderPutBuffer(uint8_t *usbBuffer, uint32_t size)
 {
+    assert(size % I2S_FRAME_LEN == 0);
+
+    for (size_t k = 0; k < size; k += I2S_FRAME_LEN)
+    {
+        for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+        {
+            uint32_t *pos = &s_txAudioPos[inst];
+
+            memcpy(&s_i2sTxBuff[inst][*pos], usbBuffer + k + (inst * I2S_FRAME_LEN_PER_INST), I2S_FRAME_LEN_PER_INST);
+            *pos = (*pos + I2S_FRAME_LEN_PER_INST) % (I2S_BUFF_SIZE * I2S_BUFF_NUM);
+        }
+    }
 }
 
 /*!
@@ -121,7 +131,7 @@ void USB_AudioRecorderGetBuffer(uint8_t *usbBuffer, uint32_t size)
         for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
         {
             uint32_t *pos = &s_rxAudioPos[inst];
-#if USE_RX_FILTER_32_DOWN
+#if USE_FILTER_32_DOWN
             uint32_t *outBuffer = (uint32_t *) (usbBuffer + k);
             uint32_t *i2sBuffer = (uint32_t *) &s_i2sRxBuff[inst][*pos];
 
@@ -347,14 +357,6 @@ void BOARD_I2S_Init(void)
     DMA_SetupChannels();
     
     I2S_DMA_Setup(&rxConfig, &txConfig);
-
-    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
-    {
-        for (size_t x = 0; x < (I2S_BUFF_SIZE * I2S_BUFF_NUM); x++)
-        {
-            s_i2sTxBuff[inst][x] = 0xA5;
-        }
-    }
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
