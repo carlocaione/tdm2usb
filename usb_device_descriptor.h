@@ -39,7 +39,7 @@
 
 /* Configuration, interface and endpoint. */
 #define USB_DEVICE_CONFIGURATION_COUNT (1U)
-#define USB_DEVICE_STRING_COUNT        (3U)
+#define USB_DEVICE_STRING_COUNT        (15U)
 #define USB_DEVICE_LANGUAGE_COUNT      (1U)
 #define USB_INTERFACE_COUNT            (1U)
 #define USB_AUDIO_ENDPOINT_COUNT       (1U)

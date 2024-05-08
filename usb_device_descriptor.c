@@ -16,6 +16,8 @@
 #include "usb_device_descriptor.h"
 #include "tdm2usb.h"
 
+#include "usb_device_strings.h"
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -236,7 +238,7 @@ uint8_t g_UsbDeviceDescriptor[] = {
     USB_SHORT_GET_HIGH(USB_DEVICE_DEMO_BCD_VERSION), /* Device release number in binary-coded decimal */
     0x01U,                                           /* Index of string descriptor describing manufacturer */
     0x02U,                                           /* Index of string descriptor describing product */
-    0x00U,                                           /* Index of string descriptor describing the
+    0x03U,                                           /* Index of string descriptor describing the
                                                         device's serial number */
     USB_DEVICE_CONFIGURATION_COUNT,                  /* Number of possible configurations */
 };
@@ -309,7 +311,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bFunctionClass          1 Audio
      * bFunctionSubClass       0
      * bFunctionProtocol      32
-     * iFunction               0
+     * iFunction               4
      */
     USB_AUDIO_INTERFACE_ASSOCIATION_DESC_LENGTH, /* Descriptor size is 8 bytes  */
     USB_DESCRIPTOR_TYPE_INTERFACE_ASSOCIATION, /* INTERFACE_ASSOCIATION Descriptor Type   */
@@ -318,7 +320,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_CLASS,    /* The function belongs to the Audio Interface Class  */
     0x00U,              /* The function belongs to the SUBCLASS_UNDEFINED Subclass   */
     USB_AUDIO_PROTOCOL, /* Protocol code = 32   */
-    0x00U,              /* The Function string descriptor index is 0  */
+    0x04U,              /* The Function string descriptor index is 4  */
 
     /**
      * Interface Descriptor:
@@ -330,7 +332,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bInterfaceClass         1 Audio
      * bInterfaceSubClass      1 Control Device
      * bInterfaceProtocol     32
-     * iInterface              2
+     * iInterface              5
      */
     USB_DESCRIPTOR_LENGTH_INTERFACE, /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_INTERFACE,   /* INTERFACE Descriptor Type   */
@@ -340,7 +342,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_CLASS,           /* The interface implements the Audio Interface class   */
     USB_SUBCLASS_AUDIOCONTROL, /* The interface implements the AUDIOCONTROL Subclass  */
     USB_AUDIO_PROTOCOL,        /* The Protocol code is 32  */
-    0x02U,                     /* The interface string descriptor index is 2  */
+    0x05U,                     /* The interface string descriptor index is 5  */
 
     /**
      * AudioControl Interface Descriptor:
@@ -374,7 +376,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      *   Clock Frequency Control (read/write)
      *   Clock Validity Control (read-only)
      * bAssocTerminal          0
-     * iClockSource            2
+     * iClockSource            6
      */
     USB_AUDIO_CLOCK_SOURCE_DESC_LENGTH,                     /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,                 /* CS_INTERFACE Descriptor Type  */
@@ -388,7 +390,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
               D3..2: Clock Validity Control is present but read-only
               D7..4: Reserved, should set to 0 */
     0x00U, /* This Clock Source has no association   */
-    0x02U, /* Index of a string descriptor, describing the Clock Source Entity  */
+    0x06U, /* Index of a string descriptor, describing the Clock Source Entity  */
 
     /**
      * AudioControl Interface Descriptor:
@@ -401,7 +403,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      *   Clock Frequency Control (read/write)
      *   Clock Validity Control (read-only)
      * bAssocTerminal          0
-     * iClockSource            2
+     * iClockSource            6
      */
     USB_AUDIO_CLOCK_SOURCE_DESC_LENGTH,                     /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,                 /* CS_INTERFACE Descriptor Type  */
@@ -415,7 +417,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
               D3..2: Clock Validity Control is present but read-only
               D7..4: Reserved, should set to 0 */
     0x00U, /* This Clock Source has no association   */
-    0x02U, /* Index of a string descriptor, describing the Clock Source Entity  */
+    0x06U, /* Index of a string descriptor, describing the Clock Source Entity  */
 
     /**
      * AudioControl Interface Descriptor:
@@ -430,7 +432,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmChannelConfig    0x00000000
      * iChannelNames           0
      * bmControls         0x0000
-     * iTerminal               2
+     * iTerminal               9
      */
     USB_AUDIO_INPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,              /* CS_INTERFACE Descriptor Type   */
@@ -456,7 +458,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
               D9..8: Underflow Control is not present
               D11..10: Overflow Control is not present
               D15..12: Reserved, should set to 0*/
-    0x02U, /* Index of a string descriptor, describing the Input Terminal.  */
+    0x09U, /* Index of a string descriptor, describing the Input Terminal.  */
 
     /**
      * AudioControl Interface Descriptor:
@@ -471,7 +473,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmChannelConfig    0x00000000
      * iChannelNames           0
      * bmControls         0x0000
-     * iTerminal               2
+     * iTerminal               7
      */
     USB_AUDIO_INPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,              /* CS_INTERFACE Descriptor Type   */
@@ -497,7 +499,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
               D9..8: Underflow Control is not present
               D11..10: Overflow Control is not present
               D15..12: Reserved, should set to 0*/
-    0x02U, /* Index of a string descriptor, describing the Input Terminal.  */
+    0x07U, /* Index of a string descriptor, describing the Input Terminal.  */
 
     /**
      * AudioControl Interface Descriptor:
@@ -549,7 +551,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bSourceID               2
      * bCSourceID             16
      * bmControls         0x0000
-     * iTerminal               0
+     * iTerminal               8
      */
     USB_AUDIO_OUTPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,               /* CS_INTERFACE Descriptor Type  */
@@ -570,7 +572,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
               D7..6: Underflow Control is not present
               D9..8: Overflow Control is not present
               D15..10: Reserved, should set to 0   */
-    0x00U, /* Index of a string descriptor, describing the Output Terminal.  */
+    0x08U, /* Index of a string descriptor, describing the Output Terminal.  */
 
     /**
      * AudioControl Interface Descriptor:
@@ -583,7 +585,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bSourceID               4
      * bCSourceID             17
      * bmControls         0x0000
-     * iTerminal               0
+     * iTerminal              10
      */
     USB_AUDIO_OUTPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,               /* CS_INTERFACE Descriptor Type  */
@@ -603,7 +605,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
               D7..6: Underflow Control is not present
               D9..8: Overflow Control is not present
               D15..10: Reserved, should set to 0   */
-    0x00U, /* Index of a string descriptor, describing the Output Terminal.  */
+    0x0AU, /* Index of a string descriptor, describing the Output Terminal.  */
 
     /**
      * Interface Descriptor:
@@ -615,7 +617,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bInterfaceClass         1 Audio
      * bInterfaceSubClass      2 Streaming
      * bInterfaceProtocol     32
-     * iInterface              2
+     * iInterface             13
      */
     USB_DESCRIPTOR_LENGTH_INTERFACE,  /* Descriptor size is 9 bytes  */
     USB_DESCRIPTOR_TYPE_INTERFACE,    /* INTERFACE Descriptor Type   */
@@ -625,7 +627,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_CLASS,          /* The interface implements the Audio Interface class  */
     USB_SUBCLASS_AUDIOSTREAM, /* The interface implements the AUDIOSTREAMING Subclass  */
     USB_AUDIO_PROTOCOL,       /* The Protocol code is 32   */
-    0x02U,                    /* The device doesn't have a string descriptor describing this iInterface  */
+    0x0DU,                    /* Index of a string descriptor */
 
     /**
      * Interface Descriptor:
@@ -637,7 +639,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bInterfaceClass         1 Audio
      * bInterfaceSubClass      2 Streaming
      * bInterfaceProtocol     32
-     * iInterface              2
+     * iInterface             14
      */
     USB_DESCRIPTOR_LENGTH_INTERFACE,  /* Descriptor size is 9 bytes  */
     USB_DESCRIPTOR_TYPE_INTERFACE,    /* INTERFACE Descriptor Type  */
@@ -647,7 +649,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_CLASS,          /* The interface implements the Audio Interface class  */
     USB_SUBCLASS_AUDIOSTREAM, /* The interface implements the AUDIOSTREAMING Subclass  */
     USB_AUDIO_PROTOCOL,       /* The Protocol code is 32   */
-    0x02U,                    /* The device doesn't have a string descriptor describing this iInterface  */
+    0x0EU,                    /* Index of a string descriptor */
 
     /**
      * AudioStreaming Interface Descriptor:
@@ -752,7 +754,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bInterfaceClass         1 Audio
      * bInterfaceSubClass      2 Streaming
      * bInterfaceProtocol     32
-     * iInterface              2
+     * iInterface             11
      */
     USB_DESCRIPTOR_LENGTH_INTERFACE,  /* Descriptor size is 9 bytes  */
     USB_DESCRIPTOR_TYPE_INTERFACE,    /* INTERFACE Descriptor Type   */
@@ -762,7 +764,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_CLASS,          /* The interface implements the Audio Interface class  */
     USB_SUBCLASS_AUDIOSTREAM, /* The interface implements the AUDIOSTREAMING Subclass  */
     USB_AUDIO_PROTOCOL,       /* The Protocol code is 32   */
-    0x02U,                    /* The device doesn't have a string descriptor describing this iInterface  */
+    0x0BU,                    /* Index of a string descriptor */
 
     /**
      * Interface Descriptor:
@@ -774,7 +776,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bInterfaceClass         1 Audio
      * bInterfaceSubClass      2 Streaming
      * bInterfaceProtocol     32
-     * iInterface              2
+     * iInterface             12
      */
     USB_DESCRIPTOR_LENGTH_INTERFACE,  /* Descriptor size is 9 bytes  */
     USB_DESCRIPTOR_TYPE_INTERFACE,    /* INTERFACE Descriptor Type  */
@@ -784,7 +786,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_CLASS,          /* The interface implements the Audio Interface class  */
     USB_SUBCLASS_AUDIOSTREAM, /* The interface implements the AUDIOSTREAMING Subclass  */
     USB_AUDIO_PROTOCOL,       /* The Protocol code is 32   */
-    0x02U,                    /* The device doesn't have a string descriptor describing this iInterface  */
+    0x0CU,                    /* Index of a string descriptor */
 
     /**
      * AudioStreaming Interface Descriptor:
@@ -882,7 +884,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
 
 /* Define string descriptor */
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
-uint8_t g_UsbDeviceString0[] = {
+uint8_t g_UsbDeviceStringNull0[] = {
     2U + 2U,
     USB_DESCRIPTOR_TYPE_STRING,
     0x09U,
@@ -890,57 +892,109 @@ uint8_t g_UsbDeviceString0[] = {
 };
 
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
-uint8_t g_UsbDeviceString1[] = {
-    2U + 2U * 18U, USB_DESCRIPTOR_TYPE_STRING,
-    'N',           0x00U,
-    'X',           0x00U,
-    'P',           0x00U,
-    ' ',           0x00U,
-    'S',           0x00U,
-    'E',           0x00U,
-    'M',           0x00U,
-    'I',           0x00U,
-    'C',           0x00U,
-    'O',           0x00U,
-    'N',           0x00U,
-    'D',           0x00U,
-    'U',           0x00U,
-    'C',           0x00U,
-    'T',           0x00U,
-    'O',           0x00U,
-    'R',           0x00U,
-    'S',           0x00U,
+uint8_t g_UsbDeviceStringManufacturer1[] = {
+    USB_STRING_MANUFACTURER
 };
 
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
-uint8_t g_UsbDeviceString2[] = {
-    2U + 2U * 14U, USB_DESCRIPTOR_TYPE_STRING,
-    'U',           0x00U,
-    'S',           0x00U,
-    'B',           0x00U,
-    ' ',           0x00U,
-    'A',           0x00U,
-    'U',           0x00U,
-    'D',           0x00U,
-    'I',           0x00U,
-    'O',           0x00U,
-    ' ',           0x00U,
-    'D',           0x00U,
-    'E',           0x00U,
-    'M',           0x00U,
-    'O',           0x00U,
+uint8_t g_UsbDeviceStringProduct2[] = {
+    USB_STRING_PRODUCT
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringSerial3[] = {
+    USB_STRING_SERIAL
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringSourceSink4[] = {
+    USB_STRING_SOURCE_SINK
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringTopologyControl5[] = {
+    USB_STRING_TOPOLOGY_CONTROL
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceString48000Hz6[] = {
+    USB_STRING_48000HZ
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringUsbhOut7[] = {
+    USB_STRING_USBH_OUT
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringUsbhIn8[] = {
+    USB_STRING_USBH_IN
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringUsbdOut9[] = {
+    USB_STRING_USBD_OUT
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringUsbdIn10[] = {
+    USB_STRING_USBD_IN
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringPlaybackInactive11[] = {
+    USB_STRING_PLAYBACK_INACTIVE
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringPlaybackActive12[] = {
+    USB_STRING_PLAYBACK_ACTIVE
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringCaptureInactive13[] = {
+    USB_STRING_CAPTURE_INACTIVE
+};
+
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_UsbDeviceStringCaptureActive14[] = {
+    USB_STRING_CAPTURE_ACTIVE
 };
 
 uint32_t g_UsbDeviceStringDescriptorLength[USB_DEVICE_STRING_COUNT] = {
-    sizeof(g_UsbDeviceString0),
-    sizeof(g_UsbDeviceString1),
-    sizeof(g_UsbDeviceString2),
+    sizeof(g_UsbDeviceStringNull0),
+    sizeof(g_UsbDeviceStringManufacturer1),
+    sizeof(g_UsbDeviceStringProduct2),
+    sizeof(g_UsbDeviceStringSerial3),
+    sizeof(g_UsbDeviceStringSourceSink4),
+    sizeof(g_UsbDeviceStringTopologyControl5),
+    sizeof(g_UsbDeviceString48000Hz6),
+    sizeof(g_UsbDeviceStringUsbhOut7),
+    sizeof(g_UsbDeviceStringUsbhIn8),
+    sizeof(g_UsbDeviceStringUsbdOut9),
+    sizeof(g_UsbDeviceStringUsbdIn10),
+    sizeof(g_UsbDeviceStringPlaybackInactive11),
+    sizeof(g_UsbDeviceStringPlaybackActive12),
+    sizeof(g_UsbDeviceStringCaptureInactive13),
+    sizeof(g_UsbDeviceStringCaptureActive14),
 };
 
 uint8_t *g_UsbDeviceStringDescriptorArray[USB_DEVICE_STRING_COUNT] = {
-    g_UsbDeviceString0,
-    g_UsbDeviceString1,
-    g_UsbDeviceString2,
+    g_UsbDeviceStringNull0,
+    g_UsbDeviceStringManufacturer1,
+    g_UsbDeviceStringProduct2,
+    g_UsbDeviceStringSerial3,
+    g_UsbDeviceStringSourceSink4,
+    g_UsbDeviceStringTopologyControl5,
+    g_UsbDeviceString48000Hz6,
+    g_UsbDeviceStringUsbhOut7,
+    g_UsbDeviceStringUsbhIn8,
+    g_UsbDeviceStringUsbdOut9,
+    g_UsbDeviceStringUsbdIn10,
+    g_UsbDeviceStringPlaybackInactive11,
+    g_UsbDeviceStringPlaybackActive12,
+    g_UsbDeviceStringCaptureInactive13,
+    g_UsbDeviceStringCaptureActive14,
 };
 
 usb_language_t g_UsbDeviceLanguage[USB_DEVICE_LANGUAGE_COUNT] = {{
@@ -950,8 +1004,8 @@ usb_language_t g_UsbDeviceLanguage[USB_DEVICE_LANGUAGE_COUNT] = {{
 }};
 
 usb_language_list_t g_UsbDeviceLanguageList = {
-    g_UsbDeviceString0,
-    sizeof(g_UsbDeviceString0),
+    g_UsbDeviceStringNull0,
+    sizeof(g_UsbDeviceStringNull0),
     g_UsbDeviceLanguage,
     USB_DEVICE_LANGUAGE_COUNT,
 };
