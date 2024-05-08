@@ -240,17 +240,20 @@ static void I2S_SetupSharedSignals(void)
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm7, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm7, kI2S_BRIDGE_SignalDataIn, kI2S_BRIDGE_ShareSet0);
 
-    /* [TX] FLEXCOMM4 sharing SDOUT */
-    I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet1, kI2S_BRIDGE_SignalDataOut, kI2S_BRIDGE_Flexcomm4);
-
     /* [TX] FLEXCOMM4 getting SCK and WS from FLEXCOMM5 */
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_ShareSet0);
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
 
-    /* [TX] FLEXCOMM6 getting SCK and WS from FLEXCOMM5 and sharing SDOUT with FLEXCOMM4 */
+    /* [TX] FLEXCOMM6 getting SCK and WS from FLEXCOMM5 */
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm6, kI2S_BRIDGE_SignalSCK, kI2S_BRIDGE_ShareSet0);
     I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm6, kI2S_BRIDGE_SignalWS, kI2S_BRIDGE_ShareSet0);
-    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm6, kI2S_BRIDGE_SignalDataOut, kI2S_BRIDGE_ShareSet1);
+
+    /* [TX] FLEXCOMM6 and FLEXCOMM4 share the same SDOUT line */
+    I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet1, kI2S_BRIDGE_SignalDataOut, kI2S_BRIDGE_Flexcomm4);
+    I2S_BRIDGE_SetShareSignalSrc(kI2S_BRIDGE_ShareSet1, kI2S_BRIDGE_SignalDataOut, kI2S_BRIDGE_Flexcomm6);
+
+    /* [TX] SDOUT is from FLEXCOMM4 connector */
+    I2S_BRIDGE_SetFlexcommSignalShareSet(kI2S_BRIDGE_Flexcomm4, kI2S_BRIDGE_SignalDataOut, kI2S_BRIDGE_ShareSet1);
 }
 
 /*!
@@ -347,7 +350,7 @@ void BOARD_I2S_Init(void)
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        for (size_t x = 0; x < I2S_BUFF_SIZE; x++)
+        for (size_t x = 0; x < (I2S_BUFF_SIZE * I2S_BUFF_NUM); x++)
         {
             s_i2sTxBuff[inst][x] = 0xA5;
         }
