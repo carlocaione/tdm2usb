@@ -241,6 +241,27 @@ uint8_t g_UsbDeviceDescriptor[] = {
     USB_DEVICE_CONFIGURATION_COUNT,                  /* Number of possible configurations */
 };
 
+#define TOTAL_LENGHT (USB_DESCRIPTOR_LENGTH_CONFIGURE + \
+                      USB_AUDIO_INTERFACE_ASSOCIATION_DESC_LENGTH + \
+                      USB_DESCRIPTOR_LENGTH_INTERFACE + \
+                      USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + \
+                      (2 * USB_AUDIO_CLOCK_SOURCE_DESC_LENGTH) + \
+                      (2 * USB_AUDIO_INPUT_TERMINAL_DESC_LENGTH) + \
+                      USB_AUDIO_FEATURE_UNIT_DESC_LENGTH(1) + \
+                      (2 * USB_AUDIO_OUTPUT_TERMINAL_DESC_LENGTH) + \
+                      USB_DESCRIPTOR_LENGTH_INTERFACE + \
+                      USB_DESCRIPTOR_LENGTH_INTERFACE + \
+                      USB_AUDIO_AS_INTERFACE_DESC_LENGTH + \
+                      USB_AUDIO_TYPE_I_FORMAT_TYPE_DESC_LENGTH + \
+                      USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH + \
+                      USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH + \
+                      USB_DESCRIPTOR_LENGTH_INTERFACE + \
+                      USB_DESCRIPTOR_LENGTH_INTERFACE + \
+                      USB_AUDIO_AS_INTERFACE_DESC_LENGTH + \
+                      USB_AUDIO_TYPE_I_FORMAT_TYPE_DESC_LENGTH + \
+                      USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH + \
+                      USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH)
+
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
 uint8_t g_UsbDeviceConfigurationDescriptor[] = {
 
@@ -258,18 +279,8 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      */
     USB_DESCRIPTOR_LENGTH_CONFIGURE, /* Size of this descriptor in bytes */
     USB_DESCRIPTOR_TYPE_CONFIGURE,   /* CONFIGURATION Descriptor Type */
-    USB_SHORT_GET_LOW(USB_DESCRIPTOR_LENGTH_CONFIGURE + 0x08U + USB_DESCRIPTOR_LENGTH_INTERFACE +
-                      USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + (0x08U * 2) + (0x11U * 2) + 0x0EU + (0x0CU * 2) +
-                      USB_DESCRIPTOR_LENGTH_INTERFACE + USB_DESCRIPTOR_LENGTH_INTERFACE + 0x10U + 0x06U +
-                      USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH + USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH +
-                      USB_DESCRIPTOR_LENGTH_INTERFACE + USB_DESCRIPTOR_LENGTH_INTERFACE + 0x10U + 0x06U +
-                      USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH + USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH),
-    USB_SHORT_GET_HIGH(
-        USB_DESCRIPTOR_LENGTH_CONFIGURE + 0x08U + USB_DESCRIPTOR_LENGTH_INTERFACE +
-        USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + (0x08U * 2) + (0x11U * 2) + 0x0EU + (0x0CU * 2) + USB_DESCRIPTOR_LENGTH_INTERFACE +
-        USB_DESCRIPTOR_LENGTH_INTERFACE + 0x10U + 0x06U + USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH +
-        USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH + USB_DESCRIPTOR_LENGTH_INTERFACE + USB_DESCRIPTOR_LENGTH_INTERFACE +
-        0x10U + 0x06U + USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH + USB_AUDIO_CLASS_SPECIFIC_ENDPOINT_LENGTH), /* Total length of data returned for this configuration. */
+    USB_SHORT_GET_LOW(TOTAL_LENGHT),
+    USB_SHORT_GET_HIGH(TOTAL_LENGHT), /* Total length of data returned for this configuration. */
     USB_AUDIO_INTERFACE_COUNT,           /* Number of interfaces supported by this configuration */
     USB_AUDIO_CONFIGURE_INDEX,           /* Value to use as an argument to the
                                                       SetConfiguration() request to select this configuration */
@@ -300,7 +311,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bFunctionProtocol      32
      * iFunction               0
      */
-    0x08U,                                     /* Descriptor size is 8 bytes  */
+    USB_AUDIO_INTERFACE_ASSOCIATION_DESC_LENGTH, /* Descriptor size is 8 bytes  */
     USB_DESCRIPTOR_TYPE_INTERFACE_ASSOCIATION, /* INTERFACE_ASSOCIATION Descriptor Type   */
     0x00U,                                     /* The first interface number associated with this function is 0   */
     0x03U,              /* The number of contiguous interfaces associated with this function is 3   */
@@ -365,7 +376,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bAssocTerminal          0
      * iClockSource            2
      */
-    0x08U,                                                  /* Size of the descriptor, in bytes  */
+    USB_AUDIO_CLOCK_SOURCE_DESC_LENGTH,                     /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,                 /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT, /* CLOCK_SOURCE descriptor subtype  */
     USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* Constant uniquely identifying the Clock Source Entity within
@@ -392,7 +403,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bAssocTerminal          0
      * iClockSource            2
      */
-    0x08U,                                                  /* Size of the descriptor, in bytes  */
+    USB_AUDIO_CLOCK_SOURCE_DESC_LENGTH,                     /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,                 /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT, /* CLOCK_SOURCE descriptor subtype  */
     USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* Constant uniquely identifying the Clock Source Entity within
@@ -421,7 +432,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmControls         0x0000
      * iTerminal               2
      */
-    0x11U,                                               /* Size of the descriptor, in bytes  */
+    USB_AUDIO_INPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,              /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL, /* INPUT_TERMINAL descriptor subtype   */
     USB_AUDIO_RECORDER_CONTROL_INPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
@@ -462,7 +473,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmControls         0x0000
      * iTerminal               2
      */
-    0x11U,                                               /* Size of the descriptor, in bytes  */
+    USB_AUDIO_INPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,              /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL, /* INPUT_TERMINAL descriptor subtype   */
     USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
@@ -501,7 +512,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmaControls(1)     0x00000000
      * iFeature                0
      */
-    0x0EU,                                             /* Size of the descriptor, in bytes  : 6 + (1 + 1) * 4 */
+    USB_AUDIO_FEATURE_UNIT_DESC_LENGTH(1),             /* Size of the descriptor, in bytes  : 6 + (1 + 1) * 4 */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,            /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_FEATURE_UNIT, /* FEATURE_UNIT descriptor subtype   */
     USB_AUDIO_RECORDER_CONTROL_FEATURE_UNIT_ID,   /* Constant uniquely identifying the Unit within the audio function.
@@ -540,7 +551,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmControls         0x0000
      * iTerminal               0
      */
-    0x0CU,                                                /* Size of the descriptor, in bytes   */
+    USB_AUDIO_OUTPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,               /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL, /* OUTPUT_TERMINAL descriptor subtype   */
     USB_AUDIO_RECORDER_CONTROL_OUTPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
@@ -574,7 +585,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmControls         0x0000
      * iTerminal               0
      */
-    0x0CU,                                                /* Size of the descriptor, in bytes   */
+    USB_AUDIO_OUTPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,               /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL, /* OUTPUT_TERMINAL descriptor subtype   */
     USB_AUDIO_PLAYER_CONTROL_OUTPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
@@ -652,7 +663,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmChannelConfig    0x00000000
      * iChannelNames           0
      */
-    0x10U,                                             /* Size of the descriptor, in bytes   */
+    USB_AUDIO_AS_INTERFACE_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,            /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_STREAMING_AS_GENERAL, /* AS_GENERAL descriptor subtype   */
     USB_AUDIO_RECORDER_CONTROL_OUTPUT_TERMINAL_ID,     /* The Terminal ID of the terminal to which this interface is
@@ -681,7 +692,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bSubslotSize            4
      * bBitResolution         32
      */
-    0x06U,                                              /* Size of the descriptor, in bytes   */
+    USB_AUDIO_TYPE_I_FORMAT_TYPE_DESC_LENGTH,           /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,             /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_STREAMING_FORMAT_TYPE, /* FORMAT_TYPE descriptor subtype   */
     USB_AUDIO_FORMAT_TYPE_I, /* The format type AudioStreaming interfae using is FORMAT_TYPE_I (0x01)   */
@@ -789,7 +800,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bmChannelConfig    0x00000000
      * iChannelNames           0
      */
-    0x10U,                                             /* Size of the descriptor, in bytes   */
+    USB_AUDIO_AS_INTERFACE_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,            /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_STREAMING_AS_GENERAL, /* AS_GENERAL descriptor subtype   */
     USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID,     /* The Terminal ID of the terminal to which this interface is
@@ -818,7 +829,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bSubslotSize            4
      * bBitResolution         32
      */
-    0x06U,                                              /* Size of the descriptor, in bytes   */
+    USB_AUDIO_TYPE_I_FORMAT_TYPE_DESC_LENGTH,           /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,             /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_STREAMING_FORMAT_TYPE, /* FORMAT_TYPE descriptor subtype   */
     USB_AUDIO_FORMAT_TYPE_I, /* The format type AudioStreaming interfae using is FORMAT_TYPE_I (0x01)   */
