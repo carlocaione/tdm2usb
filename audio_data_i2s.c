@@ -129,6 +129,11 @@ void USB_AudioRecorderGetBuffer(uint8_t *usbBuffer, uint32_t size)
 {
     assert(size % I2S_FRAME_LEN == 0);
 
+    if (g_rxFirstInt == 0)
+    {
+        return;
+    }
+
     for (size_t k = 0; k < size; k += I2S_FRAME_LEN)
     {
         for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
@@ -167,11 +172,6 @@ static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
 {
     if (g_rxFirstInt == 0)
     {
-        for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
-        {
-            s_rxAudioPos[inst] = 0;
-        }
-
         g_rxFirstInt = 1;
     }
 }
