@@ -81,9 +81,10 @@
 #define I2S_BUFF_NUM (2U)
 
 /**
- * Buffer size for each I2S DMA buffer. We use 4 times the size of the USB packet [1536 bytes]
+ * Buffer size for each I2S DMA buffer. We use 4 times the size of the USB
+ * packet divided by the number of I2S instances [768 bytes]
  */
-#define I2S_BUFF_SIZE (USB_MAX_PACKET_SIZE * 4U)
+#define I2S_BUFF_SIZE ((USB_MAX_PACKET_SIZE * 4U) / I2S_INST_NUM)
 
 /**
  * Number of total channels [16 channels]
