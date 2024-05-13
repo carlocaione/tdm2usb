@@ -20,23 +20,59 @@
 
 /**
  *                                                           +-------------------+
- *              EP 2 IN (data)                          +----+ CLOCK_SOURCE  (6) +----+
+ *              <- EP 2 IN (data) [SOURCE]              +----+ CLOCK_SOURCE  (6) +----+
  *             +--------------+                         |    +-------------------+    |
  *        USB  |              |  I2S                    |                             |
  * PC  <-------+      IN      <-------+ DEV   +---------v----------+       +----------v----------+
  *             |              |  RX           | INPUT_TERMINAL (2) +------>+ OUTPUT_TERMINAL (4) |
  *             +--------------+               | Microphone         |       | USB Streaming       |
- *                                            +--------------------+       +---------------------+
+ *              GENERATOR                     +--------------------+       +---------------------+
  *
- *              EP 1 IN (feedback)                           +-------------------+
- *              EP 1 OUT (data)                         +----+ CLOCK_SOURCE  (5) +----+
+ *
+ *              <- EP 1 IN (feedback)                        +-------------------+
+ *              -> EP 1 OUT (data) [SINK]               +----+ CLOCK_SOURCE  (5) +----+
  *             +--------------+                         |    +-------------------+    |
  *        USB  |              |  I2S                    |                             |
  * PC  +------->     OUT      +-------> DEV   +---------v----------+       +----------v----------+
  *             |              |  TX           | INPUT_TERMINAL (1) +------>+ OUTPUT_TERMINAL (3) |
  *             +--------------+               | USB Streaming      |       | Speaker             |
- *                                            +--------------------+       +---------------------+
+ *              SPEAKER                       +--------------------+       +---------------------+
  *
+ * ...................................................................................................
+ *
+ *                +------------------------------+------------------------------+
+ *                |                              |                              |
+ *                | Source                       | Sink                         |
+ *                |                              |                              |
+ * +----------------------------------------------------------------------------+
+ * |              |                              |                              |
+ * | Asynchronous | Free running Fs              | Free running Fs              |
+ * |              |                              |                              |
+ * |              | Provides implicit            | Provides explicit            |
+ * |              | feedforward (data stream)    | feedback (isochronous pipe)  |
+ * |              |                              |                              |
+ * +----------------------------------------------------------------------------+
+ * |              |                              |                              |
+ * |  Synchronous | Fs locked to SOF             | Fs locked to SOF             |
+ * |              |                              |                              | <--- (with programmable PLL)
+ * |              | Uses implicit feedback (SOF) | Uses implicit feedback (SOF) |
+ * |              |                              |                              |
+ * +----------------------------------------------------------------------------+
+ * |              |                              |                              |
+ * |     Adaptive | Fs locked to sink            | Fs locked to data flow       |
+ * |              |                              |                              |
+ * |              | Uses explicit feedback       | Uses implicit feedforward    |
+ * |              | (isochronous pipe)           | (data stream)                |
+ * |              |                              |                              |
+ * +--------------+------------------------------+------------------------------+
+ *
+ * GENERATOR [source]: - Synch EP
+ *                     - USB_DEVICE_AUDIO_USE_SYNC_MODE not set
+ *                     - No feedback EP
+ *
+ * SPEAKER [sink]: - Asynch EP
+ *                 - USB_DEVICE_AUDIO_USE_SYNC_MODE set by default
+ *                 - Feedback EP only when USB_DEVICE_AUDIO_USE_SYNC_MODE is NOT set
  */
 
 /*******************************************************************************
