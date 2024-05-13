@@ -682,9 +682,9 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bLength                 7
      * bDescriptorType         5
      * bEndpointAddress     0x82  EP 2 IN
-     * bmAttributes           13
+     * bmAttributes            5
      *   Transfer Type            Isochronous
-     *   Synch Type               Synchronous
+     *   Synch Type               Asynchronous
      *   Usage Type               Data
      * wMaxPacketSize     0x0180  1x 384 bytes
      * bInterval               1
@@ -693,9 +693,9 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH, /* Descriptor size is 7 bytes  */
     USB_DESCRIPTOR_TYPE_ENDPOINT,                   /* ENDPOINT Descriptor Type   */
     USB_AUDIO_STREAM_IN_ENDPOINT | (USB_IN << 7),      /* This is an IN endpoint with endpoint number 2   */
-    0x0DU,                                          /* Types -
+    0x05U,                                          /* Types -
                                                        Transfer: ISOCHRONOUS
-                                                       Sync: Sync
+                                                       Sync: Async
                                                        Usage: Data EP  */
     USB_SHORT_GET_LOW(FS_ISO_IN_ENDP_PACKET_SIZE),
     USB_SHORT_GET_HIGH(FS_ISO_IN_ENDP_PACKET_SIZE), /* Maximum packet size for this endpoint */
@@ -819,9 +819,9 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * bLength                 7
      * bDescriptorType         5
      * bEndpointAddress     0x01  EP 1 OUT
-     * bmAttributes           13
+     * bmAttributes            5
      *   Transfer Type            Isochronous
-     *   Synch Type               Synchronous
+     *   Synch Type               Asynchronous
      *   Usage Type               Data
      * wMaxPacketSize     0x0180  1x 384 bytes
      * bInterval               1
@@ -830,9 +830,9 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_STANDARD_AS_ISO_DATA_ENDPOINT_LENGTH, /* Descriptor size is 7 bytes  */
     USB_DESCRIPTOR_TYPE_ENDPOINT,                   /* ENDPOINT Descriptor Type   */
     USB_AUDIO_STREAM_OUT_ENDPOINT | (USB_OUT << 7),      /* This is an IN endpoint with endpoint number 2   */
-    0x0DU,                                          /* Types -
+    0x05U,                                          /* Types -
                                                        Transfer: ISOCHRONOUS
-                                                       Sync: Sync
+                                                       Sync: Async
                                                        Usage: Data EP  */
     USB_SHORT_GET_LOW(FS_ISO_OUT_ENDP_PACKET_SIZE),
     USB_SHORT_GET_HIGH(FS_ISO_OUT_ENDP_PACKET_SIZE), /* Maximum packet size for this endpoint */
