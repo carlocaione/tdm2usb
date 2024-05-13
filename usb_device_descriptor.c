@@ -18,6 +18,27 @@
 
 #include "usb_device_strings.h"
 
+/**
+ *                                                           +-------------------+
+ *              EP 2 IN                                 +----+ CLOCK_SOURCE  (6) +----+
+ *             +--------------+                         |    +-------------------+    |
+ *        USB  |              |  I2S                    |                             |
+ * PC  <-------+      IN      <-------+ DEV   +---------v----------+       +----------v----------+
+ *             |              |  RX           | INPUT_TERMINAL (2) +------>+ OUTPUT_TERMINAL (4) |
+ *             +--------------+               | Microphone         |       | USB Streaming       |
+ *                                            +--------------------+       +---------------------+
+ *
+ *                                                           +-------------------+
+ *              EP 1 OUT                                +----+ CLOCK_SOURCE  (5) +----+
+ *             +--------------+                         |    +-------------------+    |
+ *        USB  |              |  I2S                    |                             |
+ * PC  +------->     OUT      +-------> DEV   +---------v----------+       +----------v----------+
+ *             |              |  TX           | INPUT_TERMINAL (1) +------>+ OUTPUT_TERMINAL (3) |
+ *             +--------------+               | USB Streaming      |       | Speaker             |
+ *                                            +--------------------+       +---------------------+
+ *
+ */
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -63,32 +84,32 @@ usb_device_endpoint_struct_t g_UsbDeviceAudioControlEndpoints[USB_AUDIO_CONTROL_
 /* Audio generator entity struct */
 usb_device_audio_entity_struct_t g_UsbDeviceAudioEntity[] = {
     {
-        USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID,
+        USB_AUDIO_IN_CONTROL_CLOCK_SOURCE_ENTITY_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT,
         0U,
     },
     {
-        USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID,
+        USB_AUDIO_OUT_CONTROL_CLOCK_SOURCE_ENTITY_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT,
         0U,
     },
     {
-        USB_AUDIO_RECORDER_CONTROL_INPUT_TERMINAL_ID,
+        USB_AUDIO_IN_CONTROL_INPUT_TERMINAL_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL,
         0U,
     },
     {
-        USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID,
+        USB_AUDIO_OUT_CONTROL_INPUT_TERMINAL_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL,
         0U,
     },
     {
-        USB_AUDIO_RECORDER_CONTROL_OUTPUT_TERMINAL_ID,
+        USB_AUDIO_IN_CONTROL_OUTPUT_TERMINAL_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL,
         0U,
     },
     {
-        USB_AUDIO_PLAYER_CONTROL_OUTPUT_TERMINAL_ID,
+        USB_AUDIO_OUT_CONTROL_OUTPUT_TERMINAL_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL,
         0U,
     },
@@ -375,7 +396,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_CLOCK_SOURCE_DESC_LENGTH,                     /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,                 /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT, /* CLOCK_SOURCE descriptor subtype  */
-    USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* Constant uniquely identifying the Clock Source Entity within
+    USB_AUDIO_IN_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* Constant uniquely identifying the Clock Source Entity within
                                                           the audio funcion */
     0x01U,                                             /* D1..0: 01: Internal Fixed Clock
                                                           D2: 0 Clock is not synchronized to SOF
@@ -402,7 +423,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_CLOCK_SOURCE_DESC_LENGTH,                     /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,                 /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_CLOCK_SOURCE_UNIT, /* CLOCK_SOURCE descriptor subtype  */
-    USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* Constant uniquely identifying the Clock Source Entity within
+    USB_AUDIO_OUT_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* Constant uniquely identifying the Clock Source Entity within
                                                           the audio funcion */
     0x01U,                                             /* D1..0: 01: Internal Fixed Clock
                                                           D2: 0 Clock is not synchronized to SOF
@@ -431,12 +452,12 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_INPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,              /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL, /* INPUT_TERMINAL descriptor subtype   */
-    USB_AUDIO_RECORDER_CONTROL_INPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
+    USB_AUDIO_IN_CONTROL_INPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
                      function. This value is used in all requests        to address this Terminal.   */
     0x01U,
     0x02U, /* A generic microphone that does not fit under any of the other classifications.  */
     0x00U, /* This Input Terminal has no association   */
-    USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Input Terminal is
+    USB_AUDIO_IN_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Input Terminal is
                                                           connected.  */
     0x10U, /* This Terminal's output audio channel cluster has 16 logical output channels   */
     0x00U,
@@ -472,12 +493,12 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_INPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes  */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,              /* CS_INTERFACE Descriptor Type   */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_INPUT_TERMINAL, /* INPUT_TERMINAL descriptor subtype   */
-    USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
+    USB_AUDIO_OUT_CONTROL_INPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
                      function. This value is used in all requests        to address this Terminal.   */
     0x01U,
     0x01U, /* USB Streaming.  */
     0x00U, /* This Input Terminal has no association   */
-    USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Input Terminal is
+    USB_AUDIO_OUT_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Input Terminal is
                                                           connected.  */
     0x10U, /* This Terminal's output audio channel cluster has 16 logical output channels   */
     0x00U,
@@ -511,14 +532,14 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_OUTPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,               /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL, /* OUTPUT_TERMINAL descriptor subtype   */
-    USB_AUDIO_RECORDER_CONTROL_OUTPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
+    USB_AUDIO_IN_CONTROL_OUTPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
                      function. This value is used in all requests        to address this Terminal.   */
     0x01U,
     0x01U, /* A Terminal dealing with a signal carried over an endpoint in an AudioStreaming interface. The
          AudioStreaming interface descriptor points to the associated Terminal through the bTerminalLink field.  */
     0x00U, /* This Output Terminal has no association  */
-    USB_AUDIO_RECORDER_CONTROL_INPUT_TERMINAL_ID, /* ID of the Unit or Terminal to which this Terminal is connected.  */
-    USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Output Terminal is
+    USB_AUDIO_IN_CONTROL_INPUT_TERMINAL_ID, /* ID of the Unit or Terminal to which this Terminal is connected.  */
+    USB_AUDIO_IN_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Output Terminal is
                                                           connected  */
     0x00U,
     0x00U, /* bmControls:   D1..0: Copy Protect Control is not present
@@ -545,13 +566,13 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_OUTPUT_TERMINAL_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,               /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL, /* OUTPUT_TERMINAL descriptor subtype   */
-    USB_AUDIO_PLAYER_CONTROL_OUTPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
+    USB_AUDIO_OUT_CONTROL_OUTPUT_TERMINAL_ID,        /* Constant uniquely identifying the Terminal within the audio
                      function. This value is used in all requests        to address this Terminal.   */
     0x01U,
     0x03U, /* Speaker */
     0x00U, /* This Output Terminal has no association  */
-    USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID, /* ID of the Unit or Terminal to which this Terminal is connected.  */
-    USB_AUDIO_PLAYER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Output Terminal is
+    USB_AUDIO_OUT_CONTROL_INPUT_TERMINAL_ID, /* ID of the Unit or Terminal to which this Terminal is connected.  */
+    USB_AUDIO_OUT_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Output Terminal is
                                                           connected  */
     0x00U,
     0x00U, /* bmControls:   D1..0: Copy Protect Control is not present
@@ -623,7 +644,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_AS_INTERFACE_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,            /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_STREAMING_AS_GENERAL, /* AS_GENERAL descriptor subtype   */
-    USB_AUDIO_RECORDER_CONTROL_OUTPUT_TERMINAL_ID,     /* The Terminal ID of the terminal to which this interface is
+    USB_AUDIO_IN_CONTROL_OUTPUT_TERMINAL_ID,     /* The Terminal ID of the terminal to which this interface is
                                                           connected   */
     0x00U,                   /* bmControls : D1..0: Active Alternate Setting Control is not present
                                 D3..2: Valid Alternate Settings Control is not present
@@ -760,7 +781,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     USB_AUDIO_AS_INTERFACE_DESC_LENGTH,                /* Size of the descriptor, in bytes   */
     USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,            /* CS_INTERFACE Descriptor Type  */
     USB_DESCRIPTOR_SUBTYPE_AUDIO_STREAMING_AS_GENERAL, /* AS_GENERAL descriptor subtype   */
-    USB_AUDIO_PLAYER_CONTROL_INPUT_TERMINAL_ID,     /* The Terminal ID of the terminal to which this interface is
+    USB_AUDIO_OUT_CONTROL_INPUT_TERMINAL_ID,     /* The Terminal ID of the terminal to which this interface is
                                                           connected   */
     0x00U,                   /* bmControls : D1..0: Active Alternate Setting Control is not present
                                 D3..2: Valid Alternate Settings Control is not present
@@ -797,7 +818,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
      * Endpoint Descriptor:
      * bLength                 7
      * bDescriptorType         5
-     * bEndpointAddress     0x02  EP 3 OUT
+     * bEndpointAddress     0x01  EP 1 OUT
      * bmAttributes           13
      *   Transfer Type            Isochronous
      *   Synch Type               Synchronous
