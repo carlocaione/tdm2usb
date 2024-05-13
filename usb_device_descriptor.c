@@ -83,11 +83,6 @@ usb_device_audio_entity_struct_t g_UsbDeviceAudioEntity[] = {
         0U,
     },
     {
-        USB_AUDIO_RECORDER_CONTROL_FEATURE_UNIT_ID,
-        USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_FEATURE_UNIT,
-        0U,
-    },
-    {
         USB_AUDIO_RECORDER_CONTROL_OUTPUT_TERMINAL_ID,
         USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_OUTPUT_TERMINAL,
         0U,
@@ -249,7 +244,6 @@ uint8_t g_UsbDeviceDescriptor[] = {
                       USB_AUDIO_CONTROL_INTERFACE_HEADER_LENGTH + \
                       (2 * USB_AUDIO_CLOCK_SOURCE_DESC_LENGTH) + \
                       (2 * USB_AUDIO_INPUT_TERMINAL_DESC_LENGTH) + \
-                      USB_AUDIO_FEATURE_UNIT_DESC_LENGTH(1) + \
                       (2 * USB_AUDIO_OUTPUT_TERMINAL_DESC_LENGTH) + \
                       USB_DESCRIPTOR_LENGTH_INTERFACE + \
                       USB_DESCRIPTOR_LENGTH_INTERFACE + \
@@ -503,45 +497,6 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
 
     /**
      * AudioControl Interface Descriptor:
-     * bLength                14
-     * bDescriptorType        36
-     * bDescriptorSubtype      6 (FEATURE_UNIT)
-     * bUnitID                 2
-     * bSourceID               1
-     * bmaControls(0)     0x0000000f
-     *   Mute Control (read/write)
-     *   Volume Control (read/write)
-     * bmaControls(1)     0x00000000
-     * iFeature                0
-     */
-    USB_AUDIO_FEATURE_UNIT_DESC_LENGTH(1),             /* Size of the descriptor, in bytes  : 6 + (1 + 1) * 4 */
-    USB_DESCRIPTOR_TYPE_AUDIO_CS_INTERFACE,            /* CS_INTERFACE Descriptor Type   */
-    USB_DESCRIPTOR_SUBTYPE_AUDIO_CONTROL_FEATURE_UNIT, /* FEATURE_UNIT descriptor subtype   */
-    USB_AUDIO_RECORDER_CONTROL_FEATURE_UNIT_ID,   /* Constant uniquely identifying the Unit within the audio function.
-                This value is used in all requests to   address this Unit.  */
-    USB_AUDIO_RECORDER_CONTROL_INPUT_TERMINAL_ID, /* ID of the Unit or Terminal to which this Feature Unit is connected.
-                                                   */
-    0x0FU,
-    0x00U,
-    0x00U,
-    0x00U, /* logic channel 0 bmaControls(0)(0x0000000F):  D1..0: Mute Control is present and host
-              programmable D3..2: Volume Control is present and host programmable D5..4: Bass
-              Control is not present D7..6: Mid Control is not present D9..8: Treble Control is not
-              present D11..10: Graphic Equalizer Control is not present D13..12: Automatic Gain
-              Control is not present D15..14: Delay Control is not present D17..16: Bass Control is
-              not present D19..18: Loudness Control is not present D21..20: Input Gain Control is
-              not present D23..22: Input Gain Pad Control is not present D25..24: Phase Inverter
-              Control is not present D27..26: Underflow Control is not present D29..28: Overflow
-              Control is not present D31..30: Reserved, should set to 0 */
-
-    0x00U,
-    0x00U,
-    0x00U,
-    0x00U,
-    0x00U, /* Index of a string descriptor, describing this Feature Unit.   */
-
-    /**
-     * AudioControl Interface Descriptor:
      * bLength                12
      * bDescriptorType        36
      * bDescriptorSubtype      3 (OUTPUT_TERMINAL)
@@ -562,7 +517,7 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
     0x01U, /* A Terminal dealing with a signal carried over an endpoint in an AudioStreaming interface. The
          AudioStreaming interface descriptor points to the associated Terminal through the bTerminalLink field.  */
     0x00U, /* This Output Terminal has no association  */
-    USB_AUDIO_RECORDER_CONTROL_FEATURE_UNIT_ID, /* ID of the Unit or Terminal to which this Terminal is connected.  */
+    USB_AUDIO_RECORDER_CONTROL_INPUT_TERMINAL_ID, /* ID of the Unit or Terminal to which this Terminal is connected.  */
     USB_AUDIO_RECORDER_CONTROL_CLOCK_SOURCE_ENTITY_ID, /* ID of the Clock Entity to which this Output Terminal is
                                                           connected  */
     0x00U,
