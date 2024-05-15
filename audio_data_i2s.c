@@ -104,7 +104,7 @@ static uint32_t s_txAudioPos[I2S_INST_NUM];
  * This function prepare audio wav data before send through I2S.
  */
 
-void USB_AudioRecorderPutBuffer(uint8_t *usbBuffer, uint32_t size)
+void USB_AudioUsb2I2sBuffer(uint8_t *usbBuffer, uint32_t size)
 {
     assert(size % I2S_FRAME_LEN == 0);
 
@@ -125,7 +125,7 @@ void USB_AudioRecorderPutBuffer(uint8_t *usbBuffer, uint32_t size)
  *
  * This function prepare audio wav data before send through USB.
  */
-void USB_AudioRecorderGetBuffer(uint8_t *usbBuffer, uint32_t size)
+void USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
 {
     assert(size % I2S_FRAME_LEN == 0);
 

@@ -86,9 +86,9 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-/* Audio generator stream endpoint information */
-usb_device_endpoint_struct_t g_UsbDeviceAudioGeneratorInEndpoints[USB_AUDIO_STREAM_IN_ENDPOINT_COUNT] = {
-    /* Audio generator ISO IN pipe */
+/* Audio device stream endpoint information */
+usb_device_endpoint_struct_t g_UsbDeviceAudiodeviceInEndpoints[USB_AUDIO_STREAM_IN_ENDPOINT_COUNT] = {
+    /* Audio device ISO IN pipe */
     {
         USB_AUDIO_STREAM_IN_ENDPOINT | (USB_IN << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
         USB_ENDPOINT_ISOCHRONOUS,
@@ -97,8 +97,8 @@ usb_device_endpoint_struct_t g_UsbDeviceAudioGeneratorInEndpoints[USB_AUDIO_STRE
     },
 };
 
-usb_device_endpoint_struct_t g_UsbDeviceAudioGeneratorOutEndpoints[USB_AUDIO_STREAM_OUT_ENDPOINT_COUNT] = {
-    /* Audio generator ISO OUT pipe */
+usb_device_endpoint_struct_t g_UsbDeviceAudiodeviceOutEndpoints[USB_AUDIO_STREAM_OUT_ENDPOINT_COUNT] = {
+    /* Audio device ISO OUT pipe */
     {
         USB_AUDIO_STREAM_OUT_ENDPOINT | (USB_OUT << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
         USB_ENDPOINT_ISOCHRONOUS,
@@ -113,7 +113,7 @@ usb_device_endpoint_struct_t g_UsbDeviceAudioGeneratorOutEndpoints[USB_AUDIO_STR
     },
 };
 
-/* Audio generator control endpoint information */
+/* Audio device control endpoint information */
 usb_device_endpoint_struct_t g_UsbDeviceAudioControlEndpoints[USB_AUDIO_CONTROL_ENDPOINT_COUNT] = {
     {
         USB_AUDIO_CONTROL_ENDPOINT | (USB_IN << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
@@ -123,7 +123,7 @@ usb_device_endpoint_struct_t g_UsbDeviceAudioControlEndpoints[USB_AUDIO_CONTROL_
     },
 };
 
-/* Audio generator entity struct */
+/* Audio device entity struct */
 usb_device_audio_entity_struct_t g_UsbDeviceAudioEntity[] = {
     {
         USB_AUDIO_IN_CONTROL_CLOCK_SOURCE_ENTITY_ID,
@@ -157,13 +157,13 @@ usb_device_audio_entity_struct_t g_UsbDeviceAudioEntity[] = {
     },
 };
 
-/* Audio generator entity information */
+/* Audio device entity information */
 usb_device_audio_entities_struct_t g_UsbDeviceAudioEntities = {
     g_UsbDeviceAudioEntity,
     sizeof(g_UsbDeviceAudioEntity) / sizeof(usb_device_audio_entity_struct_t),
 };
 
-/* Audio generator control interface information */
+/* Audio device control interface information */
 usb_device_interface_struct_t g_UsbDeviceAudioControInterface[] = {{
     USB_AUDIO_CONTROL_INTERFACE_ALTERNATE_0,
     {
@@ -173,7 +173,7 @@ usb_device_interface_struct_t g_UsbDeviceAudioControInterface[] = {{
     &g_UsbDeviceAudioEntities,
 }};
 
-/* Audio generator stream interface information */
+/* Audio device stream interface information */
 usb_device_interface_struct_t g_UsbDeviceAudioStreamInInterface[] = {
     {
         USB_AUDIO_STREAM_INTERFACE_ALTERNATE_0,
@@ -187,13 +187,13 @@ usb_device_interface_struct_t g_UsbDeviceAudioStreamInInterface[] = {
         USB_AUDIO_STREAM_INTERFACE_ALTERNATE_1,
         {
             USB_AUDIO_STREAM_IN_ENDPOINT_COUNT,
-            g_UsbDeviceAudioGeneratorInEndpoints,
+            g_UsbDeviceAudiodeviceInEndpoints,
         },
         NULL,
     },
 };
 
-/* Audio generator stream interface information */
+/* Audio device stream interface information */
 usb_device_interface_struct_t g_UsbDeviceAudioStreamOutInterface[] = {
     {
         USB_AUDIO_STREAM_INTERFACE_ALTERNATE_0,
@@ -207,13 +207,13 @@ usb_device_interface_struct_t g_UsbDeviceAudioStreamOutInterface[] = {
         USB_AUDIO_STREAM_INTERFACE_ALTERNATE_1,
         {
             USB_AUDIO_STREAM_OUT_ENDPOINT_COUNT,
-            g_UsbDeviceAudioGeneratorOutEndpoints,
+            g_UsbDeviceAudiodeviceOutEndpoints,
         },
         NULL,
     },
 };
 
-/* Define interfaces for audio generator */
+/* Define interfaces for audio device */
 usb_device_interfaces_struct_t g_UsbDeviceAudioInterfaces[USB_AUDIO_INTERFACE_COUNT] = {
     {
         USB_AUDIO_INTERFACE_CONTROL,
@@ -244,7 +244,7 @@ usb_device_interfaces_struct_t g_UsbDeviceAudioInterfaces[USB_AUDIO_INTERFACE_CO
     }
 };
 
-/* Define configurations for audio generator */
+/* Define configurations for audio device */
 usb_device_interface_list_t g_UsbDeviceAudioInterfaceList[USB_DEVICE_CONFIGURATION_COUNT] = {
     {
         USB_AUDIO_INTERFACE_COUNT,
@@ -252,7 +252,7 @@ usb_device_interface_list_t g_UsbDeviceAudioInterfaceList[USB_DEVICE_CONFIGURATI
     },
 };
 
-/* Define class information for audio generator */
+/* Define class information for audio device */
 usb_device_class_struct_t g_UsbDeviceAudioClass = {
     g_UsbDeviceAudioInterfaceList,
     kUSB_DeviceClassTypeAudio,
@@ -1214,25 +1214,25 @@ usb_status_t USB_DeviceSetSpeed(usb_device_handle handle, uint8_t speed)
 
     if (USB_SPEED_HIGH == speed)
     {
-        g_UsbDeviceAudioGeneratorInEndpoints[0].maxPacketSize = HS_ISO_IN_ENDP_PACKET_SIZE;
-        g_UsbDeviceAudioGeneratorInEndpoints[0].interval      = HS_ISO_IN_ENDP_INTERVAL;
+        g_UsbDeviceAudiodeviceInEndpoints[0].maxPacketSize = HS_ISO_IN_ENDP_PACKET_SIZE;
+        g_UsbDeviceAudiodeviceInEndpoints[0].interval      = HS_ISO_IN_ENDP_INTERVAL;
 
-        g_UsbDeviceAudioGeneratorOutEndpoints[0].maxPacketSize = HS_ISO_OUT_ENDP_PACKET_SIZE;
-        g_UsbDeviceAudioGeneratorOutEndpoints[0].interval      = HS_ISO_OUT_ENDP_INTERVAL;
+        g_UsbDeviceAudiodeviceOutEndpoints[0].maxPacketSize = HS_ISO_OUT_ENDP_PACKET_SIZE;
+        g_UsbDeviceAudiodeviceOutEndpoints[0].interval      = HS_ISO_OUT_ENDP_INTERVAL;
 
-        g_UsbDeviceAudioGeneratorOutEndpoints[1].maxPacketSize = HS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE;
-        g_UsbDeviceAudioGeneratorOutEndpoints[1].interval      = HS_ISO_OUT_FEEDBACK_ENDP_INTERVAL;
+        g_UsbDeviceAudiodeviceOutEndpoints[1].maxPacketSize = HS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE;
+        g_UsbDeviceAudiodeviceOutEndpoints[1].interval      = HS_ISO_OUT_FEEDBACK_ENDP_INTERVAL;
     }
     else
     {
-        g_UsbDeviceAudioGeneratorInEndpoints[0].maxPacketSize = FS_ISO_IN_ENDP_PACKET_SIZE;
-        g_UsbDeviceAudioGeneratorInEndpoints[0].interval      = FS_ISO_IN_ENDP_INTERVAL;
+        g_UsbDeviceAudiodeviceInEndpoints[0].maxPacketSize = FS_ISO_IN_ENDP_PACKET_SIZE;
+        g_UsbDeviceAudiodeviceInEndpoints[0].interval      = FS_ISO_IN_ENDP_INTERVAL;
 
-        g_UsbDeviceAudioGeneratorOutEndpoints[0].maxPacketSize = FS_ISO_OUT_ENDP_PACKET_SIZE;
-        g_UsbDeviceAudioGeneratorOutEndpoints[0].interval      = FS_ISO_OUT_ENDP_INTERVAL;
+        g_UsbDeviceAudiodeviceOutEndpoints[0].maxPacketSize = FS_ISO_OUT_ENDP_PACKET_SIZE;
+        g_UsbDeviceAudiodeviceOutEndpoints[0].interval      = FS_ISO_OUT_ENDP_INTERVAL;
 
-        g_UsbDeviceAudioGeneratorOutEndpoints[1].maxPacketSize = FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE;
-        g_UsbDeviceAudioGeneratorOutEndpoints[1].interval      = FS_ISO_OUT_FEEDBACK_ENDP_INTERVAL;
+        g_UsbDeviceAudiodeviceOutEndpoints[1].maxPacketSize = FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE;
+        g_UsbDeviceAudiodeviceOutEndpoints[1].interval      = FS_ISO_OUT_FEEDBACK_ENDP_INTERVAL;
     }
 
     return kStatus_USB_Success;

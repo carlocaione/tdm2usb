@@ -65,7 +65,7 @@ Audio PLL contants
 #define DATA_BUFF_SIZE (AUDIO_ENDPOINT_PACKET_SIZE)
 
 /* Define the types for application */
-typedef struct _usb_audio_generator_struct
+typedef struct _usb_audio_device_struct
 {
     usb_device_handle deviceHandle;
     class_handle_t audioHandle;
@@ -118,6 +118,6 @@ typedef struct _usb_audio_generator_struct
     volatile int32_t audioPllTickEmaFrac;
     volatile int32_t audioPllStep;
 #endif
-} usb_audio_generator_struct_t;
+} usb_audio_device_struct_t;
 
 #endif /* __USB_AUDIO_H__ */
