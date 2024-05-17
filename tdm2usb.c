@@ -649,17 +649,12 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
             break;
 
         case kUSB_DeviceAudioEventStreamRecvResponse:
-            if ((0U != g_audioDevice.attach) &&
-                (ep_cb_param->length == ((USB_SPEED_HIGH == g_audioDevice.speed) ? HS_ISO_OUT_ENDP_PACKET_SIZE :
-                                                                                      FS_ISO_OUT_ENDP_PACKET_SIZE)))
+            if ((0U != g_audioDevice.attach) && (ep_cb_param->length != (USB_CANCELLED_TRANSFER_LENGTH)))
             {
+                USB_AudioUsb2I2sBuffer(g_usbBuffOut, ep_cb_param->length);
                 error = USB_DeviceAudioRecv(handle, USB_AUDIO_STREAM_OUT_ENDPOINT, g_usbBuffOut,
                                             (USB_SPEED_HIGH == g_audioDevice.speed) ? HS_ISO_OUT_ENDP_PACKET_SIZE :
                                                                                          FS_ISO_OUT_ENDP_PACKET_SIZE);
-                USB_AudioUsb2I2sBuffer(g_usbBuffOut, (USB_SPEED_HIGH == g_audioDevice.speed) ?
-                                                            HS_ISO_OUT_ENDP_PACKET_SIZE :
-                                                            FS_ISO_OUT_ENDP_PACKET_SIZE);
-
             }
             break;
 
@@ -777,10 +772,6 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                                 g_audioDevice.audioHandle, USB_AUDIO_STREAM_OUT_ENDPOINT, g_usbBuffOut,
                                 (USB_SPEED_HIGH == g_audioDevice.speed) ? HS_ISO_OUT_ENDP_PACKET_SIZE :
                                                                              FS_ISO_OUT_ENDP_PACKET_SIZE);
-                            USB_AudioUsb2I2sBuffer(g_usbBuffOut, (USB_SPEED_HIGH == g_audioDevice.speed) ?
-                                                                        HS_ISO_OUT_ENDP_PACKET_SIZE :
-                                                                        FS_ISO_OUT_ENDP_PACKET_SIZE);
-
                         }
                     }
                 }
