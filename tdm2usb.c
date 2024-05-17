@@ -19,6 +19,7 @@
 #include "usb_device_descriptor.h"
 
 #include "tdm2usb.h"
+#include "audio_data_i2s.h"
 
 #include "fsl_device_registers.h"
 #include "fsl_debug_console.h"
@@ -44,18 +45,13 @@
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-void BOARD_InitHardware(void);
-void USB_DeviceClockInit(void);
-void USB_DeviceIsrEnable(void);
 #if USB_DEVICE_CONFIG_USE_TASK
 void USB_DeviceTaskFn(void *deviceHandle);
 #endif
 
 usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void *param);
 usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *param);
-extern void USB_AudioI2s2UsbBuffer(uint8_t *buffer, uint32_t size);
-extern void USB_AudioUsb2I2sBuffer(uint8_t *buffer, uint32_t size);
-extern void BOARD_I2S_Init(void);
+
 #if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
 extern void SCTIMER_CaptureInit(void);
 #endif
@@ -67,66 +63,63 @@ static uint32_t eventCounterU = 0;
 static uint32_t captureRegisterNumber;
 static sctimer_config_t sctimerInfo;
 #endif
-extern usb_audio_device_struct_t g_audioDevice;
-/* Audio data information */
-extern uint8_t g_usbBuffIn[];
-extern uint8_t g_usbBuffOut[];
 
+extern usb_audio_device_struct_t g_audioDevice;
 extern usb_device_class_struct_t g_UsbDeviceAudioClass;
 
 /* Default value of audio device struct */
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
 usb_audio_device_struct_t g_audioDevice = {
-    NULL,                  /* deviceHandle */
-    NULL,                  /* audioHandle */
-    NULL,                  /* applicationTaskHandle */
-    NULL,                  /* deviceTaskHandle */
-    0x01U,                 /* copyProtect */
-    0x01U,                 /* curMute */
-    {0x00U, 0x80U},        /* curVolume */
-    {0x00U, 0x80U},        /* minVolume */
-    {0xFFU, 0x7FU},        /* maxVolume */
-    {0x01U, 0x00U},        /* resVolume */
-    0x00U,                 /* curBass */
-    0x80U,                 /* minBass */
-    0x7FU,                 /* maxBass */
-    0x01U,                 /* resBass */
-    0x00U,                 /* curMid */
-    0x80U,                 /* minMid */
-    0x7FU,                 /* maxMid */
-    0x01U,                 /* resMid */
-    0x01U,                 /* curTreble */
-    0x80U,                 /* minTreble */
-    0x7FU,                 /* maxTreble */
-    0x01U,                 /* resTreble */
-    0x01U,                 /* curAutomaticGain */
-    {0x00U, 0x40U},        /* curDelay */
-    {0x00U, 0x00U},        /* minDelay */
-    {0xFFU, 0xFFU},        /* maxDelay */
-    {0x00U, 0x01U},        /* resDelay */
-    0x01U,                 /* curLoudness */
-    {0x00U, 0x00U, 0x01U}, /* curSamplingFrequency */
-    {0x00U, 0x00U, 0x01U}, /* minSamplingFrequency */
-    {0x00U, 0x00U, 0x01U}, /* maxSamplingFrequency */
-    {0x00U, 0x00U, 0x01U}, /* resSamplingFrequency */
-    0U,             /* curMute20 */
-    1U,             /* curClockValid */
-    {0x00U, 0x1FU}, /* curVolume20 */
-    48000U,                   /* curSampleFrequency, This should be changed to 48000 if sampling rate is 48k */
-    {1U, 48000U, 48000U, 0U}, /* freqControlRange */
-    {1U, 0x8001U, 0x7FFFU, 1U}, /* volumeControlRange */
-    0,              /* currentConfiguration */
-    {0, 0, 0},      /* currentInterfaceAlternateSetting */
-    USB_SPEED_FULL, /* speed */
-    0U,             /* attach */
+    .deviceHandle                     = NULL,
+    .audioHandle                      = NULL,
+    .applicationTaskHandle            = NULL,
+    .deviceTaskHandle                 = NULL,
+    .copyProtect                      = 0x01U,
+    .curMute                          = 0x01U,
+    .curVolume                        = {0x00U, 0x80U},
+    .minVolume                        = {0x00U, 0x80U},
+    .maxVolume                        = {0xFFU, 0x7FU},
+    .resVolume                        = {0x01U, 0x00U},
+    .curBass                          = 0x00U,
+    .minBass                          = 0x80U,
+    .maxBass                          = 0x7FU,
+    .resBass                          = 0x01U,
+    .curMid                           = 0x00U,
+    .minMid                           = 0x80U,
+    .maxMid                           = 0x7FU,
+    .resMid                           = 0x01U,
+    .curTreble                        = 0x01U,
+    .minTreble                        = 0x80U,
+    .maxTreble                        = 0x7FU,
+    .resTreble                        = 0x01U,
+    .curAutomaticGain                 = 0x01U,
+    .curDelay                         = {0x00U, 0x40U},
+    .minDelay                         = {0x00U, 0x00U},
+    .maxDelay                         = {0xFFU, 0xFFU},
+    .resDelay                         = {0x00U, 0x01U},
+    .curLoudness                      = 0x01U,
+    .curSamplingFrequency             = {0x00U, 0x00U, 0x01U},
+    .minSamplingFrequency             = {0x00U, 0x00U, 0x01U},
+    .maxSamplingFrequency             = {0x00U, 0x00U, 0x01U},
+    .resSamplingFrequency             = {0x00U, 0x00U, 0x01U},
+    .curMute20                        = 0U,
+    .curClockValid                    = 1U,
+    .curVolume20                      = {0x00U, 0x1FU},
+    .curSampleFrequency               = 48000U,
+    .freqControlRange                 = {1U, 48000U, 48000U, 0U},
+    .volumeControlRange               = {1U, 0x8001U, 0x7FFFU, 1U},
+    .currentConfiguration             = 0,
+    .currentInterfaceAlternateSetting = {0, 0, 0},
+    .speed                            = USB_SPEED_FULL,
+    .attach                           = 0U,
 #if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
-    0,                                 /* generatorIntervalCount */
-    0,                                 /* curAudioPllFrac */
-    0,                                 /* audioPllTicksPrev */
-    0,                                 /* audioPllTicksDiff */
-    AUDIO_PLL_USB1_SOF_INTERVAL_COUNT, /* audioPllTicksEma */
-    0,                                 /* audioPllTickEmaFrac */
-    AUDIO_PLL_FRACTIONAL_CHANGE_STEP,  /* audioPllStep */
+    .generatorIntervalCount           = 0,
+    .curAudioPllFrac                  = 0,
+    .audioPllTicksPrev                = 0,
+    .audioPllTicksDiff                = 0,
+    .audioPllTicksEma                 = AUDIO_PLL_USB1_SOF_INTERVAL_COUNT,
+    .audioPllTickEmaFrac              = 0,
+    .audioPllStep                     = AUDIO_PLL_FRACTIONAL_CHANGE_STEP,
 #endif
 };
 

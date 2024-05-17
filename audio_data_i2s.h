@@ -8,6 +8,13 @@
 #ifndef __AUDIO_DATA_I2S_H__
 #define __AUDIO_DATA_I2S_H__ 1
 
+void USB_AudioI2s2UsbBuffer(uint8_t *buffer, uint32_t size);
+void USB_AudioUsb2I2sBuffer(uint8_t *buffer, uint32_t size);
+void BOARD_I2S_Init(void);
+
+extern uint8_t g_usbBuffIn[];
+extern uint8_t g_usbBuffOut[];
+
 /**
  * Case for 16ch / 32bits:
  *

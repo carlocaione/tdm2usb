@@ -358,7 +358,7 @@ void BOARD_I2S_Init(void)
 
     DMA_Init(DMA);
     DMA_SetupChannels();
-    
+
     I2S_DMA_Setup(&rxConfig, &txConfig);
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
