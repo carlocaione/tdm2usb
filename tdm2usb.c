@@ -70,6 +70,8 @@ extern usb_device_class_struct_t g_UsbDeviceAudioClass;
 /* Default value of audio device struct */
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
 usb_audio_device_struct_t g_audioDevice = {
+    .streamInPacketSize               = FS_ISO_IN_ENDP_PACKET_SIZE,
+    .streamOutPacketSize              = FS_ISO_OUT_ENDP_PACKET_SIZE,
     .deviceHandle                     = NULL,
     .audioHandle                      = NULL,
     .applicationTaskHandle            = NULL,
@@ -628,16 +630,11 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
     switch (event)
     {
         case kUSB_DeviceAudioEventStreamSendResponse:
-            if ((0U != g_audioDevice.attach) &&
-                (ep_cb_param->length == ((USB_SPEED_HIGH == g_audioDevice.speed) ? HS_ISO_IN_ENDP_PACKET_SIZE :
-                                                                                      FS_ISO_IN_ENDP_PACKET_SIZE)))
+            if ((0U != g_audioDevice.attach) && (ep_cb_param->length == g_audioDevice.streamInPacketSize))
             {
-                USB_AudioI2s2UsbBuffer(g_usbBuffIn, (USB_SPEED_HIGH == g_audioDevice.speed) ?
-                                                          HS_ISO_IN_ENDP_PACKET_SIZE :
-                                                          FS_ISO_IN_ENDP_PACKET_SIZE);
-                error = USB_DeviceAudioSend(handle, USB_AUDIO_STREAM_IN_ENDPOINT, g_usbBuffIn,
-                                            (USB_SPEED_HIGH == g_audioDevice.speed) ? HS_ISO_IN_ENDP_PACKET_SIZE :
-                                                                                         FS_ISO_IN_ENDP_PACKET_SIZE);
+                USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
+                error = USB_DeviceAudioSend(handle, USB_AUDIO_STREAM_IN_ENDPOINT,
+                                            g_usbBuffIn, g_audioDevice.streamInPacketSize);
             }
             break;
 
@@ -645,9 +642,8 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
             if ((0U != g_audioDevice.attach) && (ep_cb_param->length != (USB_CANCELLED_TRANSFER_LENGTH)))
             {
                 USB_AudioUsb2I2sBuffer(g_usbBuffOut, ep_cb_param->length);
-                error = USB_DeviceAudioRecv(handle, USB_AUDIO_STREAM_OUT_ENDPOINT, g_usbBuffOut,
-                                            (USB_SPEED_HIGH == g_audioDevice.speed) ? HS_ISO_OUT_ENDP_PACKET_SIZE :
-                                                                                         FS_ISO_OUT_ENDP_PACKET_SIZE);
+                error = USB_DeviceAudioRecv(handle, USB_AUDIO_STREAM_OUT_ENDPOINT,
+                                            g_usbBuffOut, g_audioDevice.streamOutPacketSize);
             }
             break;
 
@@ -698,6 +694,11 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
             {
                 USB_DeviceSetSpeed(handle, g_audioDevice.speed);
             }
+            if (USB_SPEED_HIGH == g_audioDevice.speed)
+            {
+                g_audioDevice.streamInPacketSize = HS_ISO_IN_ENDP_PACKET_SIZE;
+                g_audioDevice.streamOutPacketSize = HS_ISO_OUT_ENDP_PACKET_SIZE;
+            }
 #endif
         }
         break;
@@ -743,13 +744,9 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                         error                                                        = kStatus_USB_Success;
                         if (USB_AUDIO_STREAM_INTERFACE_ALTERNATE_1 == alternateSetting)
                         {
-                            USB_AudioI2s2UsbBuffer(g_usbBuffIn, (USB_SPEED_HIGH == g_audioDevice.speed) ?
-                                                                      HS_ISO_IN_ENDP_PACKET_SIZE :
-                                                                      FS_ISO_IN_ENDP_PACKET_SIZE);
-                            error = USB_DeviceAudioSend(
-                                g_audioDevice.audioHandle, USB_AUDIO_STREAM_IN_ENDPOINT, g_usbBuffIn,
-                                (USB_SPEED_HIGH == g_audioDevice.speed) ? HS_ISO_IN_ENDP_PACKET_SIZE :
-                                                                             FS_ISO_IN_ENDP_PACKET_SIZE);
+                            USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
+                            error = USB_DeviceAudioSend(g_audioDevice.audioHandle, USB_AUDIO_STREAM_IN_ENDPOINT,
+                                                        g_usbBuffIn, g_audioDevice.streamInPacketSize);
                         }
                     }
                 }
@@ -761,10 +758,8 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                         error                                                        = kStatus_USB_Success;
                         if (USB_AUDIO_STREAM_INTERFACE_ALTERNATE_1 == alternateSetting)
                         {
-                            error = USB_DeviceAudioRecv(
-                                g_audioDevice.audioHandle, USB_AUDIO_STREAM_OUT_ENDPOINT, g_usbBuffOut,
-                                (USB_SPEED_HIGH == g_audioDevice.speed) ? HS_ISO_OUT_ENDP_PACKET_SIZE :
-                                                                             FS_ISO_OUT_ENDP_PACKET_SIZE);
+                            error = USB_DeviceAudioRecv(g_audioDevice.audioHandle, USB_AUDIO_STREAM_OUT_ENDPOINT,
+                                                        g_usbBuffOut, g_audioDevice.streamOutPacketSize);
                         }
                     }
                 }

@@ -71,6 +71,8 @@ typedef struct _usb_audio_device_struct
     class_handle_t audioHandle;
     TaskHandle_t applicationTaskHandle;
     TaskHandle_t deviceTaskHandle;
+    uint32_t streamInPacketSize;
+    uint32_t streamOutPacketSize;
     uint8_t copyProtect;
     uint8_t curMute;
     uint8_t curVolume[2]; /* need to consider the endians */
