@@ -744,9 +744,15 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                         error                                                        = kStatus_USB_Success;
                         if (USB_AUDIO_STREAM_INTERFACE_ALTERNATE_1 == alternateSetting)
                         {
+                            I2S_RxStart();
+
                             USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
                             error = USB_DeviceAudioSend(g_audioDevice.audioHandle, USB_AUDIO_STREAM_IN_ENDPOINT,
                                                         g_usbBuffIn, g_audioDevice.streamInPacketSize);
+                        }
+                        else
+                        {
+                            I2S_RxStop();
                         }
                     }
                 }

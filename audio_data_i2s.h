@@ -12,6 +12,9 @@ void USB_AudioI2s2UsbBuffer(uint8_t *buffer, uint32_t size);
 void USB_AudioUsb2I2sBuffer(uint8_t *buffer, uint32_t size);
 void BOARD_I2S_Init(void);
 
+void I2S_RxStart(void);
+void I2S_RxStop(void);
+
 extern uint8_t g_usbBuffIn[];
 extern uint8_t g_usbBuffOut[];
 
@@ -85,7 +88,7 @@ extern uint8_t g_usbBuffOut[];
 /**
  * Number of buffers for I2S DMA ping-pong [2]
  */
-#define I2S_BUFF_NUM (2U)
+#define I2S_BUFF_NUM (4U)
 
 /**
  * Buffer size for each I2S DMA buffer. We use 4 times the size of the USB

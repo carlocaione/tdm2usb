@@ -68,8 +68,8 @@ static i2s_dma_handle_t s_i2sDmaRxHandle[I2S_INST_NUM];
 static dma_handle_t s_dmaRxHandle[I2S_INST_NUM];
 static uint32_t s_rxAudioPos[I2S_INST_NUM];
 
-volatile unsigned int g_rxFirstInt = 0;
 volatile uint8_t g_rxNextBufIndex = 0;
+volatile uint32_t g_rxSize = 0;
 
 /* TX */
 static I2S_Type *s_i2sTxBase[] = {
@@ -121,6 +121,14 @@ void USB_AudioUsb2I2sBuffer(uint8_t *usbBuffer, uint32_t size)
 }
 
 /*!
+ * @brief I2S TX callback.
+ */
+static void I2S_TxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
+{
+    __NOP();
+}
+
+/*!
  * @brief Audio wav data prepare function.
  *
  * This function prepare audio wav data before send through USB.
@@ -129,7 +137,13 @@ void USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
 {
     assert(size % I2S_FRAME_LEN == 0);
 
-    if (g_rxFirstInt == 0)
+    /**
+     * This would require a bit of rework. For Asynchronous endpoint we should
+     * return only the number of frames we are able to serve (i.e. 5 instead of
+     * the usual 6). Problem is that our DMA buffers are bigger and multiple of
+     * the frame size so we do not have visibility at that granularity.
+     */
+    if (g_rxSize < size)
     {
         bzero(usbBuffer, size);
         return;
@@ -154,45 +168,8 @@ void USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
             *pos = (*pos + I2S_FRAME_LEN_PER_INST) % (I2S_BUFF_SIZE * I2S_BUFF_NUM);
         }
     }
-}
 
-/*!
- * @brief I2S TX callback.
- */
-static void I2S_TxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
-{
-    __NOP();
-}
-
-/*!
- * @brief I2S RX start.
- */
-static inline void I2S_RxStart(void)
-{
-    g_rxNextBufIndex = 0;
-    g_rxFirstInt = 0;
-
-    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
-    {
-        s_rxAudioPos[inst] = 0;
-        bzero(s_i2sRxBuff[inst], I2S_BUFF_NUM * I2S_BUFF_SIZE);
-
-        for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
-        {
-            I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][buf]);
-        }
-    }
-}
-
-/*!
- * @brief I2S RX stop.
- */
-static inline void I2S_RxStop(void)
-{
-    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
-    {
-        I2S_TransferAbortDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst]);
-    }
+    g_rxSize -= size;
 }
 
 /*!
@@ -231,16 +208,47 @@ static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
         return;
     }
 
+    g_rxSize += (I2S_BUFF_SIZE * I2S_INST_NUM);
+
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
         I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][g_rxNextBufIndex]);
     }
 
     g_rxNextBufIndex = ((g_rxNextBufIndex + 1) % I2S_BUFF_NUM);
+}
 
-    if (g_rxFirstInt == 0)
+/*!
+ * @brief I2S RX stop.
+ */
+void I2S_RxStop(void)
+{
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        g_rxFirstInt = 1;
+        I2S_TransferAbortDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst]);
+    }
+
+    g_rxNextBufIndex = 0;
+    g_rxSize = 0;
+
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        s_rxAudioPos[inst] = 0;
+        bzero(s_i2sRxBuff[inst], I2S_BUFF_NUM * I2S_BUFF_SIZE);
+    }
+}
+
+/*!
+ * @brief I2S RX start.
+ */
+ void I2S_RxStart(void)
+{
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
+        {
+            I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][buf]);
+        }
     }
 }
 
@@ -434,8 +442,6 @@ void BOARD_I2S_Init(void)
     DMA_SetupChannels();
 
     I2S_DMA_Setup(&rxConfig, &txConfig);
-
-    I2S_RxStart();
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
