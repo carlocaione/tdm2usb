@@ -61,7 +61,6 @@ static dma_priority_t s_i2sRxDmaPrio[] = {
     I2S_RX_1_DMA_CH_PRIO,
 };
 
-SDK_ALIGN(static dma_descriptor_t s_dmaRxDesc[I2S_INST_NUM][I2S_BUFF_NUM], FSL_FEATURE_DMA_LINK_DESCRIPTOR_ALIGN_SIZE);
 SDK_ALIGN(static uint8_t s_i2sRxBuff[I2S_INST_NUM][I2S_BUFF_SIZE * I2S_BUFF_NUM], sizeof(uint32_t));
 
 static i2s_transfer_t s_i2sRxTransfer[I2S_INST_NUM][I2S_BUFF_NUM];
@@ -70,6 +69,7 @@ static dma_handle_t s_dmaRxHandle[I2S_INST_NUM];
 static uint32_t s_rxAudioPos[I2S_INST_NUM];
 
 volatile unsigned int g_rxFirstInt = 0;
+volatile uint8_t g_rxNextBufIndex = 0;
 
 /* TX */
 static I2S_Type *s_i2sTxBase[] = {
@@ -131,6 +131,7 @@ void USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
 
     if (g_rxFirstInt == 0)
     {
+        bzero(usbBuffer, size);
         return;
     }
 
@@ -164,12 +165,79 @@ static void I2S_TxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
 }
 
 /*!
+ * @brief I2S RX start.
+ */
+static inline void I2S_RxStart(void)
+{
+    g_rxNextBufIndex = 0;
+    g_rxFirstInt = 0;
+
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        s_rxAudioPos[inst] = 0;
+        bzero(s_i2sRxBuff[inst], I2S_BUFF_NUM * I2S_BUFF_SIZE);
+
+        for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
+        {
+            I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][buf]);
+        }
+    }
+}
+
+/*!
+ * @brief I2S RX stop.
+ */
+static inline void I2S_RxStop(void)
+{
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        I2S_TransferAbortDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst]);
+    }
+}
+
+/*!
+ * @brief Check for a previous reset of the I2S stream.
+ */
+static inline bool I2S_RxCheckReset(void)
+{
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        I2S_Type *b = s_i2sRxBase[inst];
+
+        if (b->STAT & I2S_STAT_SLVFRMERR(1))
+        {
+            I2S_RxStop();
+
+            b->STAT |= I2S_STAT_SLVFRMERR(1);
+
+            I2S_RxStart();
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*!
  * @brief I2S RX callback.
  *
  * This function is called when at least one of the ping-pong buffers is full.
  */
 static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t completionStatus, void *userData)
 {
+    if (I2S_RxCheckReset())
+    {
+        return;
+    }
+
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][g_rxNextBufIndex]);
+    }
+
+    g_rxNextBufIndex = ((g_rxNextBufIndex + 1) % I2S_BUFF_NUM);
+
     if (g_rxFirstInt == 0)
     {
         g_rxFirstInt = 1;
@@ -301,7 +369,7 @@ static void DMA_SetupChannels(void)
 static void I2S_DMA_Setup(i2s_config_t *rxConfig, i2s_config_t *txConfig)
 {
     /* RX */
-    for (size_t inst = 0; inst < I2S_INST_NUM; inst++) 
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
         for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
         {
@@ -317,12 +385,18 @@ static void I2S_DMA_Setup(i2s_config_t *rxConfig, i2s_config_t *txConfig)
         I2S_EnableSecondaryChannel(s_i2sRxBase[inst], kI2S_SecondaryChannel2, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 2));
         I2S_EnableSecondaryChannel(s_i2sRxBase[inst], kI2S_SecondaryChannel3, false, CH_OFF((inst * I2S_FRAME_LEN_PER_INST), 3));
 
-        I2S_RxTransferCreateHandleDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], &s_dmaRxHandle[inst], I2S_RxCallback, (void *) s_i2sRxTransfer[inst]);
-        I2S_TransferInstallLoopDMADescriptorMemory(&s_i2sDmaRxHandle[inst], s_dmaRxDesc[inst], I2S_BUFF_NUM);
+        if (inst == (I2S_INST_NUM - 1))
+        {
+            I2S_RxTransferCreateHandleDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], &s_dmaRxHandle[inst], I2S_RxCallback, (void *) inst);
+        }
+        else
+        {
+            I2S_RxTransferCreateHandleDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], &s_dmaRxHandle[inst], NULL, NULL);
+        }
     }
 
     /* TX */
-    for (size_t inst = 0; inst < I2S_INST_NUM; inst++) 
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
         for (size_t buf = 0; buf < I2S_BUFF_NUM; buf++)
         {
@@ -361,9 +435,10 @@ void BOARD_I2S_Init(void)
 
     I2S_DMA_Setup(&rxConfig, &txConfig);
 
+    I2S_RxStart();
+
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        I2S_TransferReceiveLoopDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst], I2S_BUFF_NUM);
         I2S_TransferSendLoopDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst], s_i2sTxTransfer[inst], I2S_BUFF_NUM);
     }
 }
