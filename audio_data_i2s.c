@@ -70,6 +70,8 @@ static uint32_t s_rxAudioPos[I2S_INST_NUM];
 
 volatile uint8_t g_rxNextBufIndex = 0;
 volatile uint32_t g_rxSize = 0;
+volatile uint8_t g_rxFirstInt = 0;
+volatile uint8_t g_rxFirstGet = 0;
 
 /* TX */
 static I2S_Type *s_i2sTxBase[] = {
@@ -133,20 +135,27 @@ static void I2S_TxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
  *
  * This function prepare audio wav data before send through USB.
  */
-void USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
+uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
 {
     assert(size % I2S_FRAME_LEN == 0);
 
-    /**
-     * This would require a bit of rework. For Asynchronous endpoint we should
-     * return only the number of frames we are able to serve (i.e. 5 instead of
-     * the usual 6). Problem is that our DMA buffers are bigger and multiple of
-     * the frame size so we do not have visibility at that granularity.
-     */
+    if ((g_rxFirstInt == 0) ||
+       ((g_rxFirstGet == 0) && (g_rxNextBufIndex != (I2S_BUFF_NUM / 2))))
+    {
+        return size;
+    }
+
+    g_rxFirstGet = 1;
+
     if (g_rxSize < size)
     {
         bzero(usbBuffer, size);
-        return;
+        return size;
+    }
+
+    if (g_rxSize < I2S_BUFF_SLOT_SIZE)
+    {
+        size -= I2S_FRAME_LEN;
     }
 
     for (size_t k = 0; k < size; k += I2S_FRAME_LEN)
@@ -170,6 +179,8 @@ void USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
     }
 
     g_rxSize -= size;
+
+    return size;
 }
 
 /*!
@@ -208,7 +219,7 @@ static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
         return;
     }
 
-    g_rxSize += (I2S_BUFF_SIZE * I2S_INST_NUM);
+    g_rxSize = MIN((g_rxSize + I2S_BUFF_SLOT_SIZE), (I2S_BUFF_SLOT_SIZE * I2S_BUFF_NUM));
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
@@ -216,6 +227,11 @@ static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
     }
 
     g_rxNextBufIndex = ((g_rxNextBufIndex + 1) % I2S_BUFF_NUM);
+
+    if (g_rxNextBufIndex == (I2S_BUFF_NUM / 2))
+    {
+        g_rxFirstInt = 1;
+    }
 }
 
 /*!
@@ -230,6 +246,8 @@ void I2S_RxStop(void)
 
     g_rxNextBufIndex = 0;
     g_rxSize = 0;
+    g_rxFirstInt = 0;
+    g_rxFirstGet = 0;
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {

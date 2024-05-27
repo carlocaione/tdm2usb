@@ -8,7 +8,7 @@
 #ifndef __AUDIO_DATA_I2S_H__
 #define __AUDIO_DATA_I2S_H__ 1
 
-void USB_AudioI2s2UsbBuffer(uint8_t *buffer, uint32_t size);
+uint32_t USB_AudioI2s2UsbBuffer(uint8_t *buffer, uint32_t size);
 void USB_AudioUsb2I2sBuffer(uint8_t *buffer, uint32_t size);
 void BOARD_I2S_Init(void);
 
@@ -86,7 +86,7 @@ extern uint8_t g_usbBuffOut[];
 #define I2S_TX_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
 
 /**
- * Number of buffers for I2S DMA ping-pong [2]
+ * Number of buffers for I2S DMA ping-pong [4]
  */
 #define I2S_BUFF_NUM (4U)
 
@@ -95,6 +95,11 @@ extern uint8_t g_usbBuffOut[];
  * packet divided by the number of I2S instances [768 bytes]
  */
 #define I2S_BUFF_SIZE ((USB_MAX_PACKET_SIZE * 4U) / I2S_INST_NUM)
+
+/**
+ * Size of the I2S DMA buffer considering all the instances [3072 bytes]
+ */
+#define I2S_BUFF_SLOT_SIZE (I2S_INST_NUM * I2S_BUFF_SIZE)
 
 /**
  * Number of total channels [16 channels]

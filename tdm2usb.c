@@ -626,15 +626,16 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
     usb_status_t error = kStatus_USB_InvalidRequest;
     usb_device_endpoint_callback_message_struct_t *ep_cb_param;
     ep_cb_param = (usb_device_endpoint_callback_message_struct_t *)param;
+    uint32_t length = 0U;
 
     switch (event)
     {
         case kUSB_DeviceAudioEventStreamSendResponse:
-            if ((0U != g_audioDevice.attach) && (ep_cb_param->length == g_audioDevice.streamInPacketSize))
+            if ((0U != g_audioDevice.attach) && (ep_cb_param->length != (USB_CANCELLED_TRANSFER_LENGTH)))
             {
-                USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
+                length = USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
                 error = USB_DeviceAudioSend(handle, USB_AUDIO_STREAM_IN_ENDPOINT,
-                                            g_usbBuffIn, g_audioDevice.streamInPacketSize);
+                                            g_usbBuffIn, length);
             }
             break;
 
@@ -727,6 +728,7 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                 /* Set alternateSetting of the interface request */
                 uint8_t interface        = (uint8_t)((*temp16 & 0xFF00U) >> 0x08U);
                 uint8_t alternateSetting = (uint8_t)(*temp16 & 0x00FFU);
+                uint32_t length = 0U;
 
                 if (USB_AUDIO_CONTROL_INTERFACE_INDEX == interface)
                 {
@@ -746,9 +748,9 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                         {
                             I2S_RxStart();
 
-                            USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
+                            length = USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
                             error = USB_DeviceAudioSend(g_audioDevice.audioHandle, USB_AUDIO_STREAM_IN_ENDPOINT,
-                                                        g_usbBuffIn, g_audioDevice.streamInPacketSize);
+                                                        g_usbBuffIn, length);
                         }
                         else
                         {
