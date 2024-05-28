@@ -5,6 +5,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+// TODO: Manage reset
+// TODO: The endpoint should advertise a wMaxPacketSize of 448 (6+1 frames) to accomodate for adjustments (+/- 1)
+// TODO: Use a context struct to hold the vs_* variables (maybe)
+// TODO: We should only stay +/- 1 with respect to the 6 frames, not going lower than that
+
 #include "usb_device_config.h"
 #include "usb.h"
 #include "usb_device.h"
@@ -109,45 +114,56 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
     assert(size % I2S_FRAME_LEN == 0);
 
     /**
-     * We bail out in two cases:
-     *
-     * 1. If the DMA buffers are not half full yet (this usually happens if we
-     *    start the USB recv before the I2S side so the USB side must wait for
-     *    the I2S buffers to be filled up).
-     *
-     * 2. If the DMA buffers are half full already but we wait for the RX
-     *    pointer to be pointing to the middle of the RX DMA buffers before
-     *    starting (this usually happens when we start I2S RX before USB
-     *    streaming or when the USB is a bit slow to ramp-up and I2S is catching
-     *    up too quickly)
+     * This should always be true. If this asserts that means that the I2S is
+     * RX-ing data that the USB is not picking up (DMA buffer overflow).
      */
-    if ((vs_rxFirstInt == 0) ||
-       ((vs_rxFirstGet == 0) && (vs_rxNextBufIndex != (I2S_BUFF_NUM / 2))))
-    {
-        return size;
-    }
+    assert(vs_rxRecvSize != (I2S_BUFF_NUM * I2S_BUFF_SIZE));
 
-    vs_rxFirstGet = 1;
+    if (vs_rxFirstGet == 0)
+    {
+        /**
+         * We bail out in two cases:
+         *
+         * 1. If the DMA buffers are not half full yet (this usually happens if we
+         *    start the USB recv before the I2S side so the USB side must wait for
+         *    the I2S buffers to be filled up).
+         *
+         * 2. If the DMA buffers are half full already but we wait for the RX
+         *    pointer to be pointing to the middle of the RX DMA buffers before
+         *    starting (this usually happens when we start I2S RX before USB
+         *    streaming or when the USB is a bit slow to ramp-up and I2S is catching
+         *    up too quickly)
+         */
+        if ((vs_rxFirstInt == 0) || (vs_rxNextBufIndex != (I2S_BUFF_NUM / 2)))
+        {
+            return size;
+        }
+
+        /**
+         * We reset the recv counter in case we alrady rolled over. This usually
+         * happens if we start the I2S RX before the USB.
+         */
+        vs_rxRecvSize = (I2S_BUFF_NUM / 2) * I2S_BUFF_SIZE;
+        vs_rxFirstGet = 1;
+    }
 
     /**
-     * This is the case when we are running out of I2S data to stream out (for
-     * example when we kill the I2S RX side)
+     * This is the case when we are running out of I2S data to stream out
+     * because we are sending data through USB at a faster rate than we are able
+     * to read those from I2S (for example when we kill the I2S RX side).
+     *
+     * NOTE: a corner case is when we stop the I2S data sending, for this case
+     *       we have to differentiate between the SCK being killed or not.
+     *
+     *       A) If the SCK is not being killed, we basically keep receiving zeroed
+     *          data from I2S, so we never reach the size == 0 condition.
+     *
+     *       B) If the SCK is being killed, we run out of I2S data so the size == 0
+     *          condition is interpreted as a Transfer Delimiter and this is
+     *          killing the receiving side (usually `arecord`) with an
+     *          Input/Output error.
      */
-    if (vs_rxRecvSize < size)
-    {
-        bzero(usbBuffer, size);
-        return size;
-    }
-
-    /**
-     * This happens when the USB side is streaming out data at a faster rate the
-     * I2S is able to provide data. In this case we slow down a bit by providing
-     * fewer frames.
-     */
-    if (vs_rxRecvSize < I2S_BUFF_SIZE)
-    {
-        size -= I2S_FRAME_LEN;
-    }
+    size = MIN(size, vs_rxRecvSize);
 
     for (size_t k = 0; k < size; k += I2S_FRAME_LEN)
     {
@@ -210,8 +226,6 @@ static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
         return;
     }
 
-    vs_rxRecvSize = MIN((vs_rxRecvSize + I2S_BUFF_SIZE), (I2S_BUFF_SIZE * I2S_BUFF_NUM));
-
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
         I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][vs_rxNextBufIndex]);
@@ -221,12 +235,17 @@ static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
 
     /**
      * We start the USB data sending only when at least half of the DMA buffers
-     * are full
+     * are full. We also reset the recv counter in case we already rolled over.
      */
-    if (vs_rxNextBufIndex == (I2S_BUFF_NUM / 2))
+    if ((vs_rxFirstInt == 0) && (vs_rxNextBufIndex == (I2S_BUFF_NUM / 2)))
     {
+        vs_rxRecvSize = (I2S_BUFF_NUM / 2) * I2S_BUFF_SIZE;
         vs_rxFirstInt = 1;
+
+        return;
     }
+
+    vs_rxRecvSize = MIN((vs_rxRecvSize + I2S_BUFF_SIZE), (I2S_BUFF_SIZE * I2S_BUFF_NUM));
 }
 
 /*!

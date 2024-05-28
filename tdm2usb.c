@@ -5,6 +5,9 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
+
+// TODO: De-init endpoints on alternate settings 0
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
