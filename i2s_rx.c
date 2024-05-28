@@ -91,10 +91,10 @@ static i2s_dma_handle_t s_i2sDmaRxHandle[I2S_INST_NUM];
 static dma_handle_t s_dmaRxHandle[I2S_INST_NUM];
 static uint32_t s_rxAudioPos[I2S_INST_NUM];
 
-volatile uint8_t g_rxNextBufIndex = 0;
-volatile uint32_t g_rxRecvSize = 0;
-volatile uint8_t g_rxFirstInt = 0;
-volatile uint8_t g_rxFirstGet = 0;
+volatile static uint8_t vs_rxNextBufIndex = 0;
+volatile static uint32_t vs_rxRecvSize = 0;
+volatile static uint8_t vs_rxFirstInt = 0;
+volatile static uint8_t vs_rxFirstGet = 0;
 
 /*******************************************************************************
  * Code
@@ -121,19 +121,19 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
      *    streaming or when the USB is a bit slow to ramp-up and I2S is catching
      *    up too quickly)
      */
-    if ((g_rxFirstInt == 0) ||
-       ((g_rxFirstGet == 0) && (g_rxNextBufIndex != (I2S_BUFF_NUM / 2))))
+    if ((vs_rxFirstInt == 0) ||
+       ((vs_rxFirstGet == 0) && (vs_rxNextBufIndex != (I2S_BUFF_NUM / 2))))
     {
         return size;
     }
 
-    g_rxFirstGet = 1;
+    vs_rxFirstGet = 1;
 
     /**
      * This is the case when we are running out of I2S data to stream out (for
      * example when we kill the I2S RX side)
      */
-    if (g_rxRecvSize < size)
+    if (vs_rxRecvSize < size)
     {
         bzero(usbBuffer, size);
         return size;
@@ -144,7 +144,7 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
      * I2S is able to provide data. In this case we slow down a bit by providing
      * fewer frames.
      */
-    if (g_rxRecvSize < I2S_BUFF_SIZE)
+    if (vs_rxRecvSize < I2S_BUFF_SIZE)
     {
         size -= I2S_FRAME_LEN;
     }
@@ -169,7 +169,7 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
         }
     }
 
-    g_rxRecvSize -= size;
+    vs_rxRecvSize -= size;
 
     return size;
 }
@@ -210,22 +210,22 @@ static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
         return;
     }
 
-    g_rxRecvSize = MIN((g_rxRecvSize + I2S_BUFF_SIZE), (I2S_BUFF_SIZE * I2S_BUFF_NUM));
+    vs_rxRecvSize = MIN((vs_rxRecvSize + I2S_BUFF_SIZE), (I2S_BUFF_SIZE * I2S_BUFF_NUM));
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][g_rxNextBufIndex]);
+        I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][vs_rxNextBufIndex]);
     }
 
-    g_rxNextBufIndex = ((g_rxNextBufIndex + 1) % I2S_BUFF_NUM);
+    vs_rxNextBufIndex = ((vs_rxNextBufIndex + 1) % I2S_BUFF_NUM);
 
     /**
      * We start the USB data sending only when at least half of the DMA buffers
      * are full
      */
-    if (g_rxNextBufIndex == (I2S_BUFF_NUM / 2))
+    if (vs_rxNextBufIndex == (I2S_BUFF_NUM / 2))
     {
-        g_rxFirstInt = 1;
+        vs_rxFirstInt = 1;
     }
 }
 
@@ -239,10 +239,10 @@ void I2S_RxStop(void)
         I2S_TransferAbortDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst]);
     }
 
-    g_rxNextBufIndex = 0;
-    g_rxFirstInt = 0;
-    g_rxFirstGet = 0;
-    g_rxRecvSize = 0;
+    vs_rxNextBufIndex = 0;
+    vs_rxFirstInt = 0;
+    vs_rxFirstGet = 0;
+    vs_rxRecvSize = 0;
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
