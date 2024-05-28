@@ -19,7 +19,9 @@
 #include "usb_device_descriptor.h"
 
 #include "tdm2usb.h"
-#include "audio_data_i2s.h"
+#include "i2s.h"
+#include "i2s_rx.h"
+#include "i2s_tx.h"
 
 #include "fsl_device_registers.h"
 #include "fsl_debug_console.h"
@@ -926,6 +928,9 @@ void main(void)
 #endif
 
     BOARD_I2S_Init();
+
+    BOARD_I2S_RxInit();
+    BOARD_I2S_TxInit();
 
     if (xTaskCreate(APPTask,                                /* pointer to the task */
                     "app task",                             /* task name for kernel awareness debugging */

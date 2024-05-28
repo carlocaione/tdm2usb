@@ -5,18 +5,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef __AUDIO_DATA_I2S_H__
-#define __AUDIO_DATA_I2S_H__ 1
+#ifndef __I2S_H__
+#define __I2S_H__ 1
 
-uint32_t USB_AudioI2s2UsbBuffer(uint8_t *buffer, uint32_t size);
-void USB_AudioUsb2I2sBuffer(uint8_t *buffer, uint32_t size);
 void BOARD_I2S_Init(void);
-
-void I2S_RxStart(void);
-void I2S_RxStop(void);
-
-extern uint8_t g_usbBuffIn[];
-extern uint8_t g_usbBuffOut[];
 
 /**
  * Case for 16ch / 32bits:
@@ -32,11 +24,37 @@ extern uint8_t g_usbBuffOut[];
  * +-----------------------------------------------+ 16CH / 64B
  *  FRAME PER INSTANCE
  * +-----------------------+ 8CH / 32B
+ *
+ *
+ *
+ *               +                        +
+ *               | I2S_BUFF_SIZE_PER_INST |
+ *    CH0-CH7    +------------------------+ +-------+ +-------+ +---+---+
+ *               | I2S_BUFF_SIZE_PER_INST |                         |      +---> I2S_BUFF_NUM = 4
+ *    CH8-CH15   +------------------------+ +-------+ +-------+ +---+---+
+ *               |                        |                         |
+ *       +       |                        |                         |
+ *       |       +->   I2S_BUFF_SIZE   <--+      +----------+       v
+ *       |                                       |          |
+ *       v                                       v        +----X----X----X----+
+ *                                            6 FRAMES    +----X----X----X----+
+ * I2S_INST_NUM = 2                                         U    U     U    U
+ *                                                          S    S     S    S
+ *                                                          B    B     B    B
+ *                                                          P    P     P    P
+ *                                                          K    K     K    K
+ *                                                          T    T     T    T
+ *
  */
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+/**
+ * Helper macro to set the offset for the secondary channels.
+ */
+#define CH_OFF(off, n) (TO_BITS(off) + (TO_BITS(I2S_CH_LEN_PER_PAIR) * (n)))
+
 /**
  * Silly macro for byte -> bits conversion.
  */
@@ -53,37 +71,10 @@ extern uint8_t g_usbBuffOut[];
 #define USB_MAX_PACKET_SIZE (HS_ISO_IN_ENDP_PACKET_SIZE)
 
 /**
- * I2S HW controllers.
- */
-#define I2S_RX_0 (I2S5) /* FLEXCOMM5 */
-#define I2S_RX_1 (I2S7) /* FLEXCOMM7 */
-
-#define I2S_TX_0 (I2S4) /* FLEXCOMM4 */
-#define I2S_TX_1 (I2S6) /* FLEXCOMM6 */
-
-/**
- * I2S DMA channels.
- */
-#define I2S_RX_0_DMA_CH (10) /* Flexcomm Interface 5 RX */
-#define I2S_RX_1_DMA_CH (14) /* Flexcomm Interface 7 RX */
-
-#define I2S_TX_0_DMA_CH (9)  /* Flexcomm Interface 4 TX */
-#define I2S_TX_1_DMA_CH (13) /* Flexcomm Interface 6 TX */
-
-/**
  * Number of I2S instances. Each I2S instance (controller) supports at maximum 8
  * channels, so we need 2 instances for 16-channels [2 instances]
  */
-#define I2S_INST_NUM (ARRAY_SIZE(s_i2sRxBase))
-
-/**
- * I2S DMA chennels priority.
- */
-#define I2S_RX_0_DMA_CH_PRIO (kDMA_ChannelPriority2)
-#define I2S_RX_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
-
-#define I2S_TX_0_DMA_CH_PRIO (kDMA_ChannelPriority2)
-#define I2S_TX_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
+#define I2S_INST_NUM (2U)
 
 /**
  * Number of buffers for I2S DMA ping-pong [4]
@@ -91,15 +82,15 @@ extern uint8_t g_usbBuffOut[];
 #define I2S_BUFF_NUM (4U)
 
 /**
- * Buffer size for each I2S DMA buffer. We use 4 times the size of the USB
+ * Size of each I2S DMA instance buffer. We use 4 times the size of the USB
  * packet divided by the number of I2S instances [768 bytes]
  */
-#define I2S_BUFF_SIZE ((USB_MAX_PACKET_SIZE * 4U) / I2S_INST_NUM)
+#define I2S_BUFF_SIZE_PER_INST ((USB_MAX_PACKET_SIZE * 4U) / I2S_INST_NUM)
 
 /**
  * Size of the I2S DMA buffer considering all the instances [3072 bytes]
  */
-#define I2S_BUFF_SLOT_SIZE (I2S_INST_NUM * I2S_BUFF_SIZE)
+#define I2S_BUFF_SIZE (I2S_INST_NUM * I2S_BUFF_SIZE_PER_INST)
 
 /**
  * Number of total channels [16 channels]
@@ -136,4 +127,4 @@ extern uint8_t g_usbBuffOut[];
  */
 #define I2S_FRAME_LEN_PER_INST (I2S_CH_NUM_PER_INST * I2S_CH_LEN_DATA)
 
-#endif /* __AUDIO_DATA_I2S_H__ */
+#endif /* __I2S_H__ */
