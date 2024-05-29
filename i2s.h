@@ -25,26 +25,6 @@ void BOARD_I2S_Init(void);
  *  FRAME PER INSTANCE
  * +-----------------------+ 8CH / 32B
  *
- *
- *
- *               +                        +
- *               | I2S_BUFF_SIZE_PER_INST |
- *    CH0-CH7    +------------------------+ +-------+ +-------+ +---+---+
- *               | I2S_BUFF_SIZE_PER_INST |                         |      +---> I2S_BUFF_NUM = 4
- *    CH8-CH15   +------------------------+ +-------+ +-------+ +---+---+
- *               |                        |                         |
- *       +       |                        |                         |
- *       |       +->   I2S_BUFF_SIZE   <--+      +----------+       v
- *       |                                       |          |
- *       v                                       v        +----X----X----X----+
- *                                            6 FRAMES    +----X----X----X----+
- * I2S_INST_NUM = 2                                         U    U     U    U
- *                                                          S    S     S    S
- *                                                          B    B     B    B
- *                                                          P    P     P    P
- *                                                          K    K     K    K
- *                                                          T    T     T    T
- *
  */
 
 /*******************************************************************************
@@ -66,31 +46,10 @@ void BOARD_I2S_Init(void);
 #define DMA (DMA0)
 
 /**
- * USB max packet size. We default to High-Speed [384 bytes]
- */
-#define USB_MAX_PACKET_SIZE (HS_ISO_IN_ENDP_PACKET_SIZE)
-
-/**
  * Number of I2S instances. Each I2S instance (controller) supports at maximum 8
  * channels, so we need 2 instances for 16-channels [2 instances]
  */
 #define I2S_INST_NUM (2U)
-
-/**
- * Number of buffers for I2S DMA ping-pong [4]
- */
-#define I2S_BUFF_NUM (4U)
-
-/**
- * Size of each I2S DMA instance buffer. We use 4 times the size of the USB
- * packet divided by the number of I2S instances [768 bytes]
- */
-#define I2S_BUFF_SIZE_PER_INST ((USB_MAX_PACKET_SIZE * 4U) / I2S_INST_NUM)
-
-/**
- * Size of the I2S DMA buffer considering all the instances [3072 bytes]
- */
-#define I2S_BUFF_SIZE (I2S_INST_NUM * I2S_BUFF_SIZE_PER_INST)
 
 /**
  * Number of total channels [16 channels]
