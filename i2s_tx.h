@@ -12,6 +12,8 @@
 
 void USB_AudioUsb2I2sBuffer(uint8_t *buffer, uint32_t size);
 void BOARD_I2S_TxInit(void);
+void I2S_TxStart(void);
+void I2S_TxStop(void);
 
 extern uint8_t g_usbBuffOut[];
 
@@ -30,8 +32,8 @@ extern uint8_t g_usbBuffOut[];
 /**
  * I2S DMA chennels priority.
  */
-#define I2S_TX_0_DMA_CH_PRIO (kDMA_ChannelPriority2)
-#define I2S_TX_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
+#define I2S_TX_0_DMA_CH_PRIO (kDMA_ChannelPriority7)
+#define I2S_TX_1_DMA_CH_PRIO (kDMA_ChannelPriority7)
 
 /**
  * USB max packet size. We default to High-Speed [448 bytes]

@@ -771,8 +771,14 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
                         error                                                        = kStatus_USB_Success;
                         if (USB_AUDIO_STREAM_INTERFACE_ALTERNATE_1 == alternateSetting)
                         {
+                            I2S_TxStart();
+
                             error = USB_DeviceAudioRecv(g_audioDevice.audioHandle, USB_AUDIO_STREAM_OUT_ENDPOINT,
                                                         g_usbBuffOut, g_audioDevice.streamOutPacketSize);
+                        }
+                        else
+                        {
+                            I2S_TxStop();
                         }
                     }
                 }
@@ -910,6 +916,17 @@ void APPTask(void *handle)
     }
 }
 
+#define ENABLE_DEBUG_TIMER (1)
+
+#if defined(ENABLE_DEBUG_TIMER) && (ENABLE_DEBUG_TIMER > 0U)
+#define SW_TIMER_PERIOD_MS (1000 / portTICK_PERIOD_MS) /* 1s */
+
+static void SwTimerCallback(TimerHandle_t xTimer)
+{
+    __NOP();
+}
+#endif
+
 #if defined(__CC_ARM) || (defined(__ARMCC_VERSION)) || defined(__GNUC__)
 int main(void)
 #else
@@ -919,8 +936,20 @@ void main(void)
     BOARD_InitBootPins();
     BOARD_InitBootClocks();
     BOARD_InitDebugConsole();
+    SystemCoreClockUpdate();
 
     CLOCK_EnableClock(kCLOCK_InputMux);
+
+#if defined(ENABLE_DEBUG_TIMER) && (ENABLE_DEBUG_TIMER > 0U)
+    TimerHandle_t SwTimerHandle = NULL;
+
+    SwTimerHandle = xTimerCreate("SwTimer",
+                                 SW_TIMER_PERIOD_MS,
+                                 pdTRUE,
+                                 0,
+                                 SwTimerCallback);
+    xTimerStart(SwTimerHandle, 0);
+#endif
 
 #if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
     /* attach AUDIO PLL clock to SCTimer input7. */

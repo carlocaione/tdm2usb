@@ -54,4 +54,7 @@ void BOARD_I2S_Init(void)
 {
     I2S_SetupSharedSignals();
     DMA_Init(DMA);
+
+    /* Keep this priority in sync with USB_DEVICE_INTERRUPT_PRIORITY */
+    NVIC_SetPriority(DMA0_IRQn, 6U);
 }

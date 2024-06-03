@@ -75,7 +75,7 @@ extern uint8_t g_usbBuffIn[];
 #define I2S_RX_BUFF_SIZE_PER_INST ((USB_MAX_PACKET_IN_SIZE * 4U) / I2S_INST_NUM)
 
 /**
- * Size of the I2S DMA buffer considering all the instances [3072 bytes]
+ * Size of the I2S DMA buffer considering all the instances [1536 bytes]
  */
 #define I2S_RX_BUFF_SIZE (I2S_INST_NUM * I2S_RX_BUFF_SIZE_PER_INST)
 
