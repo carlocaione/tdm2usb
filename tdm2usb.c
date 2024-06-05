@@ -69,6 +69,8 @@ static uint32_t captureRegisterNumber;
 static sctimer_config_t sctimerInfo;
 #endif
 
+static uint8_t usbAudioFeedBackBuffer[4];
+
 extern usb_audio_device_struct_t g_audioDevice;
 extern usb_device_class_struct_t g_UsbDeviceAudioClass;
 
@@ -77,6 +79,7 @@ USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
 usb_audio_device_struct_t g_audioDevice = {
     .streamInPacketSize               = FS_ISO_IN_ENDP_PACKET_SIZE,
     .streamOutPacketSize              = FS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE),
+    .feedbackOutPacketSize            = FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE,
     .deviceHandle                     = NULL,
     .audioHandle                      = NULL,
     .applicationTaskHandle            = NULL,
@@ -638,9 +641,19 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
         case kUSB_DeviceAudioEventStreamSendResponse:
             if ((0U != g_audioDevice.attach) && (ep_cb_param->length != (USB_CANCELLED_TRANSFER_LENGTH)))
             {
-                length = USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
-                error = USB_DeviceAudioSend(handle, USB_AUDIO_STREAM_IN_ENDPOINT,
-                                            g_usbBuffIn, length);
+                if (ep_cb_param->length == g_audioDevice.feedbackOutPacketSize)
+                {
+                    *((uint32_t *)&usbAudioFeedBackBuffer[0]) = USB_GetFeedback(g_audioDevice.speed);
+                    USB_DeviceAudioSend(g_audioDevice.audioHandle,
+                                    USB_AUDIO_STREAM_OUT_FEEDBACK_ENDPOINT, usbAudioFeedBackBuffer,
+                                    g_audioDevice.feedbackOutPacketSize);
+                }
+                else
+                {
+                    length = USB_AudioI2s2UsbBuffer(g_usbBuffIn, g_audioDevice.streamInPacketSize);
+                    error = USB_DeviceAudioSend(handle, USB_AUDIO_STREAM_IN_ENDPOINT,
+                                                g_usbBuffIn, length);
+                }
             }
             break;
 
@@ -704,6 +717,7 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
             {
                 g_audioDevice.streamInPacketSize = HS_ISO_IN_ENDP_PACKET_SIZE;
                 g_audioDevice.streamOutPacketSize = HS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE);
+                g_audioDevice.feedbackOutPacketSize = HS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE;
             }
 #endif
         }
@@ -775,6 +789,12 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
 
                             error = USB_DeviceAudioRecv(g_audioDevice.audioHandle, USB_AUDIO_STREAM_OUT_ENDPOINT,
                                                         g_usbBuffOut, g_audioDevice.streamOutPacketSize);
+
+                            *((uint32_t *)&usbAudioFeedBackBuffer[0]) = USB_GetFeedback(g_audioDevice.speed);
+                            USB_DeviceAudioSend(g_audioDevice.audioHandle,
+                                            USB_AUDIO_STREAM_OUT_FEEDBACK_ENDPOINT, usbAudioFeedBackBuffer,
+                                            g_audioDevice.feedbackOutPacketSize);
+
                         }
                         else
                         {
@@ -913,6 +933,7 @@ void APPTask(void *handle)
 
     while (1)
     {
+
     }
 }
 
@@ -923,9 +944,9 @@ void APPTask(void *handle)
 
 static void SwTimerCallback(TimerHandle_t xTimer)
 {
-    __NOP();
+    USB_OutPrintInfo();
 }
-#endif
+#endif /* ENABLE_DEBUG_TIMER */
 
 #if defined(__CC_ARM) || (defined(__ARMCC_VERSION)) || defined(__GNUC__)
 int main(void)

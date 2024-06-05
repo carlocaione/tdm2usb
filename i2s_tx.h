@@ -12,8 +12,13 @@
 
 void USB_AudioUsb2I2sBuffer(uint8_t *buffer, uint32_t size);
 void BOARD_I2S_TxInit(void);
+
 void I2S_TxStart(void);
 void I2S_TxStop(void);
+
+uint32_t USB_GetFeedback(uint8_t speed);
+
+void USB_OutPrintInfo(void);
 
 extern uint8_t g_usbBuffOut[];
 
