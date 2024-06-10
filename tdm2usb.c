@@ -945,6 +945,7 @@ void APPTask(void *handle)
 static void SwTimerCallback(TimerHandle_t xTimer)
 {
     USB_OutPrintInfo();
+    USB_InPrintInfo();
 }
 #endif /* ENABLE_DEBUG_TIMER */
 

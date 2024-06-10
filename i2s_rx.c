@@ -68,6 +68,13 @@
 #define USE_FILTER_32_DOWN (1)
 #define FILTER_32 (0xFFFFFF00)
 
+#define I2S_RX_FEEDBACK_TH_UP       (9U)
+#define I2S_RX_FEEDBACK_TH_DOWN     (4U)
+
+#define I2S_RX_FEEDBACK_TH_STEP     (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE)
+#define I2S_RX_FEEDBACK_NORMAL      (HS_ISO_IN_ENDP_PACKET_SIZE)
+
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -96,14 +103,50 @@ static i2s_dma_handle_t s_i2sDmaRxHandle[I2S_INST_NUM];
 static dma_handle_t s_dmaRxHandle[I2S_INST_NUM];
 static uint32_t s_rxAudioPos[I2S_INST_NUM];
 
-volatile static uint8_t vs_rxNextBufIndex = 0;
-volatile static uint32_t vs_rxRecvSize = 0;
-volatile static uint8_t vs_rxFirstInt = 0;
-volatile static uint8_t vs_rxFirstGet = 0;
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+static struct {
+    volatile uint8_t vs_rxNextBufIndex;
+    volatile uint8_t vs_rxFirstInt;
+    volatile uint8_t vs_rxFirstGet;
+    volatile uint64_t vs_rxReadDataCount;
+    volatile uint64_t vs_rxWriteDataCount;
+} usb_ctx;
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
+/*!
+ * @brief Function to print debug info
+ */
+void USB_InPrintInfo(void)
+{
+    uint32_t diff;
+
+    diff = (usb_ctx.vs_rxWriteDataCount - usb_ctx.vs_rxReadDataCount) / HS_ISO_IN_ENDP_PACKET_SIZE;
+    usb_echo("[IN/RX] diff: %ld (vs_rxFirstInt: %d, vs_rxFirstGet: %d, vs_rxNextBufIndex: %d\n\r", diff,
+              usb_ctx.vs_rxFirstInt, usb_ctx.vs_rxFirstGet, usb_ctx.vs_rxNextBufIndex);
+}
+
+uint32_t USB_GetFeedbackSize(void)
+{
+    uint32_t diff;
+
+    diff = (usb_ctx.vs_rxWriteDataCount - usb_ctx.vs_rxReadDataCount) / HS_ISO_IN_ENDP_PACKET_SIZE;
+
+    if (diff >= I2S_RX_FEEDBACK_TH_UP)
+    {
+        return (I2S_RX_FEEDBACK_NORMAL + I2S_RX_FEEDBACK_TH_STEP);
+    }
+    else if (diff <= I2S_RX_FEEDBACK_TH_DOWN)
+    {
+        return (I2S_RX_FEEDBACK_NORMAL - I2S_RX_FEEDBACK_TH_STEP);
+    }
+    else
+    {
+        return I2S_RX_FEEDBACK_NORMAL;
+    }
+}
+
 /*!
  * @brief Audio wav data prepare function.
  *
@@ -113,13 +156,7 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
 {
     assert(size % I2S_FRAME_LEN == 0);
 
-    /**
-     * This should always be true. If this asserts that means that the I2S is
-     * RX-ing data that the USB is not picking up (DMA buffer overflow).
-     */
-    assert(vs_rxRecvSize != (I2S_RX_BUFF_NUM * I2S_RX_BUFF_SIZE));
-
-    if (vs_rxFirstGet == 0)
+    if (usb_ctx.vs_rxFirstGet == 0)
     {
         /**
          * We bail out in two cases:
@@ -134,7 +171,7 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
          *    streaming or when the USB is a bit slow to ramp-up and I2S is catching
          *    up too quickly)
          */
-        if ((vs_rxFirstInt == 0) || (vs_rxNextBufIndex != (I2S_RX_BUFF_NUM / 2)))
+        if ((usb_ctx.vs_rxFirstInt == 0) || (usb_ctx.vs_rxNextBufIndex != (I2S_RX_BUFF_NUM / 2)))
         {
             return size;
         }
@@ -143,8 +180,10 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
          * We reset the recv counter in case we alrady rolled over. This usually
          * happens if we start the I2S RX before the USB.
          */
-        vs_rxRecvSize = (I2S_RX_BUFF_NUM / 2) * I2S_RX_BUFF_SIZE;
-        vs_rxFirstGet = 1;
+        usb_ctx.vs_rxWriteDataCount = (I2S_RX_BUFF_NUM / 2) * I2S_RX_BUFF_SIZE;
+        usb_ctx.vs_rxReadDataCount = 0;
+
+        usb_ctx.vs_rxFirstGet = 1;
     }
 
     /**
@@ -163,7 +202,7 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
      *          killing the receiving side (usually `arecord`) with an
      *          Input/Output error.
      */
-    size = MIN(size, vs_rxRecvSize);
+    size = USB_GetFeedbackSize();
 
     for (size_t k = 0; k < size; k += I2S_FRAME_LEN)
     {
@@ -185,7 +224,7 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
         }
     }
 
-    vs_rxRecvSize -= size;
+    usb_ctx.vs_rxReadDataCount += size;
 
     return size;
 }
@@ -228,24 +267,47 @@ static void I2S_RxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
-        I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][vs_rxNextBufIndex]);
+        I2S_RxTransferReceiveDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], s_i2sRxTransfer[inst][usb_ctx.vs_rxNextBufIndex]);
     }
 
-    vs_rxNextBufIndex = ((vs_rxNextBufIndex + 1) % I2S_RX_BUFF_NUM);
+    usb_ctx.vs_rxNextBufIndex = ((usb_ctx.vs_rxNextBufIndex + 1) % I2S_RX_BUFF_NUM);
 
     /**
      * We start the USB data sending only when at least half of the DMA buffers
      * are full. We also reset the recv counter in case we already rolled over.
      */
-    if ((vs_rxFirstInt == 0) && (vs_rxNextBufIndex == (I2S_RX_BUFF_NUM / 2)))
+    if ((usb_ctx.vs_rxFirstInt == 0) && (usb_ctx.vs_rxNextBufIndex == (I2S_RX_BUFF_NUM / 2)))
     {
-        vs_rxRecvSize = (I2S_RX_BUFF_NUM / 2) * I2S_RX_BUFF_SIZE;
-        vs_rxFirstInt = 1;
+        usb_ctx.vs_rxWriteDataCount = (I2S_RX_BUFF_NUM / 2) * I2S_RX_BUFF_SIZE;
+        usb_ctx.vs_rxReadDataCount = 0;
+
+        usb_ctx.vs_rxFirstInt = 1;
 
         return;
     }
 
-    vs_rxRecvSize = MIN((vs_rxRecvSize + I2S_RX_BUFF_SIZE), (I2S_RX_BUFF_SIZE * I2S_RX_BUFF_NUM));
+    usb_ctx.vs_rxWriteDataCount += I2S_RX_BUFF_SIZE;
+}
+
+/*!
+ * @brief I2S RX cleanup.
+ *
+ * While it is definitely redundant to cleanup on start AND stop, this is helpful
+ * for example to have a zeroed buffer between I2S streaming.
+ */
+static inline void I2S_RxCleanup(void)
+{
+    usb_ctx.vs_rxNextBufIndex = 0;
+    usb_ctx.vs_rxFirstInt = 0;
+    usb_ctx.vs_rxFirstGet = 0;
+    usb_ctx.vs_rxWriteDataCount = 0;
+    usb_ctx.vs_rxReadDataCount = 0;
+
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        s_rxAudioPos[inst] = 0;
+        bzero(s_i2sRxBuff[inst], I2S_RX_BUFF_NUM * I2S_RX_BUFF_SIZE_PER_INST);
+    }
 }
 
 /*!
@@ -258,16 +320,7 @@ void I2S_RxStop(void)
         I2S_TransferAbortDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst]);
     }
 
-    vs_rxNextBufIndex = 0;
-    vs_rxFirstInt = 0;
-    vs_rxFirstGet = 0;
-    vs_rxRecvSize = 0;
-
-    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
-    {
-        s_rxAudioPos[inst] = 0;
-        bzero(s_i2sRxBuff[inst], I2S_RX_BUFF_NUM * I2S_RX_BUFF_SIZE_PER_INST);
-    }
+    I2S_RxCleanup();
 }
 
 /*!
@@ -275,6 +328,8 @@ void I2S_RxStop(void)
  */
  void I2S_RxStart(void)
 {
+    I2S_RxCleanup();
+
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
         for (size_t buf = 0; buf < I2S_RX_BUFF_NUM; buf++)

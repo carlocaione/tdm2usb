@@ -97,7 +97,7 @@ void USB_OutPrintInfo(void)
     uint32_t diff;
 
     diff = (usb_ctx.vs_txWriteDataCount - usb_ctx.vs_txReadDataCount) / HS_ISO_OUT_ENDP_PACKET_SIZE;
-    usb_echo("diff: %ld, feedback: 0x%08x\n\r", diff, usb_ctx.vs_txFeedback);
+    usb_echo("[OUT/TX] diff: %ld, feedback: 0x%08x\n\r", diff, usb_ctx.vs_txFeedback);
 }
 
 /*!
@@ -221,22 +221,12 @@ static void I2S_TxCallback(I2S_Type *base, i2s_dma_handle_t *handle, status_t co
 }
 
 /*!
- * @brief I2S TX stop.
+ * @brief I2S TX cleanup.
+ *
+ * While it is definitely redundant to cleanup on start AND stop, this is helpful
+ * for example to have a zeroed buffer between I2S streaming.
  */
-void I2S_TxStop(void)
-{
-    usb_ctx.vs_txI2sStarted = 0;
-
-    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
-    {
-        I2S_TransferAbortDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst]);
-    }
-}
-
-/*!
- * @brief I2S TX start.
- */
- void I2S_TxStart(void)
+static inline void I2S_TxCleanup(void)
 {
     usb_ctx.vs_txNextBufIndex = 0;
     usb_ctx.vs_txReadDataCount = 0;
@@ -253,6 +243,29 @@ void I2S_TxStop(void)
         s_txAudioPos[inst] = 0;
         bzero(s_i2sTxBuff[inst], I2S_TX_BUFF_NUM * I2S_TX_BUFF_SIZE_PER_INST);
     }
+}
+
+/*!
+ * @brief I2S TX stop.
+ */
+void I2S_TxStop(void)
+{
+    usb_ctx.vs_txI2sStarted = 0;
+
+    for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
+    {
+        I2S_TransferAbortDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst]);
+    }
+
+    I2S_TxCleanup();
+}
+
+/*!
+ * @brief I2S TX start.
+ */
+ void I2S_TxStart(void)
+{
+    I2S_TxCleanup();
 
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
