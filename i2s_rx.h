@@ -55,13 +55,13 @@ extern uint8_t g_usbBuffIn[];
 /**
  * I2S DMA chennels priority.
  */
-#define I2S_RX_0_DMA_CH_PRIO (kDMA_ChannelPriority2)
-#define I2S_RX_1_DMA_CH_PRIO (kDMA_ChannelPriority2)
+#define I2S_RX_0_DMA_CH_PRIO (kDMA_ChannelPriority7)
+#define I2S_RX_1_DMA_CH_PRIO (kDMA_ChannelPriority7)
 
 /**
- * USB max packet size. We default to High-Speed [384 bytes]
+ * USB max packet size. We default to High-Speed [448 bytes]
  */
-#define USB_MAX_PACKET_IN_SIZE (HS_ISO_IN_ENDP_PACKET_SIZE)
+#define USB_MAX_PACKET_IN_SIZE (HS_ISO_IN_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE))
 
 /**
  * Number of buffers for I2S DMA ping-pong [4]
@@ -70,12 +70,12 @@ extern uint8_t g_usbBuffIn[];
 
 /**
  * Size of each I2S DMA instance buffer. We use 4 times the size of the USB
- * packet divided by the number of I2S instances [768 bytes]
+ * packet divided by the number of I2S instances [896 bytes]
  */
 #define I2S_RX_BUFF_SIZE_PER_INST ((USB_MAX_PACKET_IN_SIZE * 4U) / I2S_INST_NUM)
 
 /**
- * Size of the I2S DMA buffer considering all the instances [1536 bytes]
+ * Size of the I2S DMA buffer considering all the instances [1792 bytes]
  */
 #define I2S_RX_BUFF_SIZE (I2S_INST_NUM * I2S_RX_BUFF_SIZE_PER_INST)
 

@@ -77,7 +77,7 @@ extern usb_device_class_struct_t g_UsbDeviceAudioClass;
 /* Default value of audio device struct */
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
 usb_audio_device_struct_t g_audioDevice = {
-    .streamInPacketSize               = FS_ISO_IN_ENDP_PACKET_SIZE,
+    .streamInPacketSize               = FS_ISO_IN_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE),
     .streamOutPacketSize              = FS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE),
     .feedbackOutPacketSize            = FS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE,
     .deviceHandle                     = NULL,
@@ -715,7 +715,7 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
             }
             if (USB_SPEED_HIGH == g_audioDevice.speed)
             {
-                g_audioDevice.streamInPacketSize = HS_ISO_IN_ENDP_PACKET_SIZE;
+                g_audioDevice.streamInPacketSize = HS_ISO_IN_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE);
                 g_audioDevice.streamOutPacketSize = HS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE);
                 g_audioDevice.feedbackOutPacketSize = HS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE;
             }
