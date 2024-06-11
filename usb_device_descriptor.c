@@ -106,10 +106,10 @@ usb_device_endpoint_struct_t g_UsbDeviceAudiodeviceOutEndpoints[USB_AUDIO_STREAM
         FS_ISO_OUT_ENDP_INTERVAL,
     },
     {
-        USB_AUDIO_STREAM_OUT_FEEDBACK_ENDPOINT | (USB_IN << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
+        USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT | (USB_IN << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
         USB_ENDPOINT_ISOCHRONOUS,
-        FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE,
-        FS_ISO_OUT_FEEDBACK_ENDP_INTERVAL,
+        FS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE,
+        FS_ISO_IN_FEEDBACK_ENDP_INTERVAL,
     },
 };
 
@@ -901,9 +901,9 @@ uint8_t g_UsbDeviceConfigurationDescriptor[] = {
                                                        Transfer: ISOCHRONOUS
                                                        Sync: Async
                                                        Usage: Data EP  */
-    USB_SHORT_GET_LOW(FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE),
-    USB_SHORT_GET_HIGH(FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE), /* Maximum packet size for this endpoint */
-    FS_ISO_OUT_FEEDBACK_ENDP_INTERVAL, /* The polling interval value */
+    USB_SHORT_GET_LOW(FS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE),
+    USB_SHORT_GET_HIGH(FS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE), /* Maximum packet size for this endpoint */
+    FS_ISO_IN_FEEDBACK_ENDP_INTERVAL, /* The polling interval value */
 
     /**
      * AudioStreaming Endpoint Descriptor:
@@ -1176,11 +1176,11 @@ usb_status_t USB_DeviceSetSpeed(usb_device_handle handle, uint8_t speed)
                     USB_SHORT_TO_LITTLE_ENDIAN_ADDRESS(HS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE), descriptorHead->endpoint.wMaxPacketSize);
                 }
 
-                if ((USB_AUDIO_STREAM_OUT_FEEDBACK_ENDPOINT == (descriptorHead->endpoint.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK)) &&
+                if ((USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT == (descriptorHead->endpoint.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK)) &&
                     ((descriptorHead->endpoint.bEndpointAddress >> USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT) == USB_IN))
                 {
-                    descriptorHead->endpoint.bInterval = HS_ISO_OUT_FEEDBACK_ENDP_INTERVAL;
-                    USB_SHORT_TO_LITTLE_ENDIAN_ADDRESS(HS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE, descriptorHead->endpoint.wMaxPacketSize);
+                    descriptorHead->endpoint.bInterval = HS_ISO_IN_FEEDBACK_ENDP_INTERVAL;
+                    USB_SHORT_TO_LITTLE_ENDIAN_ADDRESS(HS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE, descriptorHead->endpoint.wMaxPacketSize);
                 }
 
             }
@@ -1200,11 +1200,11 @@ usb_status_t USB_DeviceSetSpeed(usb_device_handle handle, uint8_t speed)
                     USB_SHORT_TO_LITTLE_ENDIAN_ADDRESS(FS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE), descriptorHead->endpoint.wMaxPacketSize);
                 }
 
-                if ((USB_AUDIO_STREAM_OUT_FEEDBACK_ENDPOINT == (descriptorHead->endpoint.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK)) &&
+                if ((USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT == (descriptorHead->endpoint.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK)) &&
                     ((descriptorHead->endpoint.bEndpointAddress >> USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT) == USB_IN))
                 {
-                    descriptorHead->endpoint.bInterval = FS_ISO_OUT_FEEDBACK_ENDP_INTERVAL;
-                    USB_SHORT_TO_LITTLE_ENDIAN_ADDRESS(FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE, descriptorHead->endpoint.wMaxPacketSize);
+                    descriptorHead->endpoint.bInterval = FS_ISO_IN_FEEDBACK_ENDP_INTERVAL;
+                    USB_SHORT_TO_LITTLE_ENDIAN_ADDRESS(FS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE, descriptorHead->endpoint.wMaxPacketSize);
                 }
 
             }
@@ -1220,8 +1220,8 @@ usb_status_t USB_DeviceSetSpeed(usb_device_handle handle, uint8_t speed)
         g_UsbDeviceAudiodeviceOutEndpoints[0].maxPacketSize = HS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE);
         g_UsbDeviceAudiodeviceOutEndpoints[0].interval      = HS_ISO_OUT_ENDP_INTERVAL;
 
-        g_UsbDeviceAudiodeviceOutEndpoints[1].maxPacketSize = HS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE;
-        g_UsbDeviceAudiodeviceOutEndpoints[1].interval      = HS_ISO_OUT_FEEDBACK_ENDP_INTERVAL;
+        g_UsbDeviceAudiodeviceOutEndpoints[1].maxPacketSize = HS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE;
+        g_UsbDeviceAudiodeviceOutEndpoints[1].interval      = HS_ISO_IN_FEEDBACK_ENDP_INTERVAL;
     }
     else
     {
@@ -1231,8 +1231,8 @@ usb_status_t USB_DeviceSetSpeed(usb_device_handle handle, uint8_t speed)
         g_UsbDeviceAudiodeviceOutEndpoints[0].maxPacketSize = FS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE);
         g_UsbDeviceAudiodeviceOutEndpoints[0].interval      = FS_ISO_OUT_ENDP_INTERVAL;
 
-        g_UsbDeviceAudiodeviceOutEndpoints[1].maxPacketSize = FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE;
-        g_UsbDeviceAudiodeviceOutEndpoints[1].interval      = FS_ISO_OUT_FEEDBACK_ENDP_INTERVAL;
+        g_UsbDeviceAudiodeviceOutEndpoints[1].maxPacketSize = FS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE;
+        g_UsbDeviceAudiodeviceOutEndpoints[1].interval      = FS_ISO_IN_FEEDBACK_ENDP_INTERVAL;
     }
 
     return kStatus_USB_Success;

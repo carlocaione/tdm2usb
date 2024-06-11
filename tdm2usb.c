@@ -79,7 +79,7 @@ USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
 usb_audio_device_struct_t g_audioDevice = {
     .streamInPacketSize               = FS_ISO_IN_ENDP_PACKET_SIZE,
     .streamOutPacketSize              = FS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE),
-    .feedbackOutPacketSize            = FS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE,
+    .feedbackOutPacketSize            = FS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE,
     .deviceHandle                     = NULL,
     .audioHandle                      = NULL,
     .applicationTaskHandle            = NULL,
@@ -645,8 +645,8 @@ usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void
                 {
                     *((uint32_t *)&usbAudioFeedBackBuffer[0]) = USB_GetFeedback(g_audioDevice.speed);
                     USB_DeviceAudioSend(g_audioDevice.audioHandle,
-                                    USB_AUDIO_STREAM_OUT_FEEDBACK_ENDPOINT, usbAudioFeedBackBuffer,
-                                    g_audioDevice.feedbackOutPacketSize);
+                                        USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT, usbAudioFeedBackBuffer,
+                                        g_audioDevice.feedbackOutPacketSize);
                 }
                 else
                 {
@@ -717,7 +717,7 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
             {
                 g_audioDevice.streamInPacketSize = HS_ISO_IN_ENDP_PACKET_SIZE;
                 g_audioDevice.streamOutPacketSize = HS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE);
-                g_audioDevice.feedbackOutPacketSize = HS_ISO_OUT_FEEDBACK_ENDP_PACKET_SIZE;
+                g_audioDevice.feedbackOutPacketSize = HS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE;
             }
 #endif
         }
@@ -792,8 +792,8 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
 
                             *((uint32_t *)&usbAudioFeedBackBuffer[0]) = USB_GetFeedback(g_audioDevice.speed);
                             USB_DeviceAudioSend(g_audioDevice.audioHandle,
-                                            USB_AUDIO_STREAM_OUT_FEEDBACK_ENDPOINT, usbAudioFeedBackBuffer,
-                                            g_audioDevice.feedbackOutPacketSize);
+                                                USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT, usbAudioFeedBackBuffer,
+                                                g_audioDevice.feedbackOutPacketSize);
 
                         }
                         else
