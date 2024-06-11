@@ -55,6 +55,7 @@ typedef enum _usb_device_class_event
  */
 typedef struct _usb_device_endpoint_struct
 {
+    uint8_t type;
     uint8_t endpointAddress; /*!< Endpoint address*/
     uint8_t transferType;    /*!< Endpoint transfer type*/
     uint16_t maxPacketSize;  /*!< Endpoint maximum packet size */

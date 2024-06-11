@@ -385,6 +385,12 @@
 
 #define USB_AUDIO_INTERFACE_STREAM_COUNT (2U)
 
+#define USB_AUDIO_STREAM_IN_ENDPOINT_TYPE          (0U)
+#define USB_AUDIO_STREAM_OUT_ENDPOINT_TYPE         (1U)
+#define USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT_TYPE (2U)
+#define USB_AUDIO_CONTROL_ENDPOINT_TYPE            (3U)
+#define USB_AUDIO_ENDPOINT_TYPE_COUNT              (4U)
+
 /*! @brief Available common EVENT types in audio class callback */
 typedef enum
 {
@@ -434,7 +440,7 @@ typedef struct _usb_device_audio_struct
     uint8_t controlAlternate;                              /*!< Current alternate setting of the control interface */
     uint8_t streamInterfaceNumber[USB_AUDIO_INTERFACE_STREAM_COUNT];                         /*!< The stream interface number of the class */
     uint8_t streamAlternate[USB_AUDIO_INTERFACE_STREAM_COUNT];                               /*!< Current alternate setting of the stream interface */
-    uint8_t streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_COUNT];                              /*!< Stream IN pipe busy flag */
+    uint8_t isBusy[USB_AUDIO_ENDPOINT_TYPE_COUNT];                              /*!< Stream IN pipe busy flag */
 } usb_device_audio_struct_t;
 
 STRUCT_PACKED
@@ -531,6 +537,7 @@ extern usb_status_t USB_DeviceAudioEvent(void *handle, uint32_t event, void *par
  * @param ep The endpoint number of the transfer.
  * @param buffer The pointer to the buffer to be transferred.
  * @param length The length of the buffer to be transferred.
+ * @param epType Endpoint type.
  * @return A USB error code or kStatus_USB_Success.
  * @retval kStatus_USB_Success Prime to send packet successfully.
  * @retval kStatus_USB_Busy The endpoint is busy in transferring.
@@ -539,7 +546,7 @@ extern usb_status_t USB_DeviceAudioEvent(void *handle, uint32_t event, void *par
  *
  * @note The function can only be called in the same context.
  */
-extern usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8_t *buffer, uint32_t length);
+extern usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8_t *buffer, uint32_t length, uint8_t epType);
 
 /*!
  * @brief Primes the endpoint to receive a packet from the host.
@@ -552,6 +559,7 @@ extern usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8
  * @param ep The endpoint number of the transfer.
  * @param buffer The pointer to the buffer to be transferred.
  * @param length The length of the buffer to be transferred.
+ * @param epType Endpoint type.
  * @return A USB error code or kStatus_USB_Success.
  * @retval kStatus_USB_Success Prime to receive packet successfully.
  * @retval kStatus_USB_Busy The endpoint is busy in transferring.
@@ -560,7 +568,7 @@ extern usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8
  *
  * @note The function can only be called in the same context.
  */
-extern usb_status_t USB_DeviceAudioRecv(class_handle_t handle, uint8_t ep, uint8_t *buffer, uint32_t length);
+extern usb_status_t USB_DeviceAudioRecv(class_handle_t handle, uint8_t ep, uint8_t *buffer, uint32_t length, uint8_t epType);
 
 /*! @}*/
 

@@ -10,7 +10,8 @@
 			"audio_data_i2s.h": "c",
 			"pin_mux.h": "c",
 			"usb.h": "c",
-			"fsl_i2s_bridge.h": "c"
+			"fsl_i2s_bridge.h": "c",
+			"system_error": "c"
 		}
 	}
 }

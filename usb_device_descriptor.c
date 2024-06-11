@@ -6,6 +6,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+// TODO: Better naming for IN/OUT
+
 #include "usb_device_config.h"
 #include "usb.h"
 #include "usb_device.h"
@@ -90,6 +92,7 @@
 usb_device_endpoint_struct_t g_UsbDeviceAudiodeviceInEndpoints[USB_AUDIO_STREAM_IN_ENDPOINT_COUNT] = {
     /* Audio device ISO IN pipe */
     {
+        USB_AUDIO_STREAM_IN_ENDPOINT_TYPE,
         USB_AUDIO_STREAM_IN_ENDPOINT | (USB_IN << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
         USB_ENDPOINT_ISOCHRONOUS,
         FS_ISO_IN_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE),
@@ -100,12 +103,14 @@ usb_device_endpoint_struct_t g_UsbDeviceAudiodeviceInEndpoints[USB_AUDIO_STREAM_
 usb_device_endpoint_struct_t g_UsbDeviceAudiodeviceOutEndpoints[USB_AUDIO_STREAM_OUT_ENDPOINT_COUNT] = {
     /* Audio device ISO OUT pipe */
     {
+        USB_AUDIO_STREAM_OUT_ENDPOINT_TYPE,
         USB_AUDIO_STREAM_OUT_ENDPOINT | (USB_OUT << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
         USB_ENDPOINT_ISOCHRONOUS,
         FS_ISO_OUT_ENDP_PACKET_SIZE + (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE),
         FS_ISO_OUT_ENDP_INTERVAL,
     },
     {
+        USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT_TYPE,
         USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT | (USB_IN << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
         USB_ENDPOINT_ISOCHRONOUS,
         FS_ISO_IN_FEEDBACK_ENDP_PACKET_SIZE,
@@ -116,6 +121,7 @@ usb_device_endpoint_struct_t g_UsbDeviceAudiodeviceOutEndpoints[USB_AUDIO_STREAM
 /* Audio device control endpoint information */
 usb_device_endpoint_struct_t g_UsbDeviceAudioControlEndpoints[USB_AUDIO_CONTROL_ENDPOINT_COUNT] = {
     {
+        USB_AUDIO_CONTROL_ENDPOINT_TYPE,
         USB_AUDIO_CONTROL_ENDPOINT | (USB_IN << USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT),
         USB_ENDPOINT_INTERRUPT,
         FS_INTERRUPT_IN_PACKET_SIZE,

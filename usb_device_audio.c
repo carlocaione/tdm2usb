@@ -6,6 +6,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+// TODO: Unify USB_DeviceAudioIsochronousOut/In/InFeedback
+
 #include "usb_device_config.h"
 #include "usb.h"
 #include "usb_device.h"
@@ -171,6 +173,57 @@ usb_status_t USB_DeviceAudioInterruptIn(usb_device_handle handle,
 }
 
 /*!
+ * @brief ISO endpoint callback function.
+ *
+ * This callback function is used to notify uplayer the transfser result of a transfer.
+ * This callback pointer is passed when the ISO IN pipe initialized.
+ *
+ * @param handle          The device handle. It equals the value returned from USB_DeviceInit.
+ * @param message         The result of the ISO IN pipe transfer.
+ * @param callbackParam  The parameter for this callback. It is same with
+ * @param epType          Endpoint type.
+ * usb_device_endpoint_callback_struct_t::callbackParam. In the class, the value is the audio class handle.
+ *
+ * @return A USB error code or kStatus_USB_Success.
+ */
+static usb_status_t USB_DeviceAudioIsochronous(usb_device_handle handle,
+                                               usb_device_endpoint_callback_message_struct_t *message,
+                                               void *callbackParam,
+                                               uint8_t epType)
+{
+    usb_device_audio_struct_t *audioHandle;
+    usb_status_t status = kStatus_USB_Error;
+    uint32_t callbackEvent;
+
+    /* Get the audio class handle */
+    audioHandle = (usb_device_audio_struct_t *)callbackParam;
+    if (NULL == audioHandle)
+    {
+        return kStatus_USB_InvalidHandle;
+
+    }
+    audioHandle->isBusy[epType] = 0U;
+
+    if (epType == USB_AUDIO_STREAM_OUT_ENDPOINT_TYPE)
+    {
+        callbackEvent = kUSB_DeviceAudioEventStreamRecvResponse;
+    }
+    else
+    {
+        callbackEvent = kUSB_DeviceAudioEventStreamSendResponse;
+    }
+
+    if ((NULL != audioHandle->configStruct) && (NULL != audioHandle->configStruct->classCallback))
+    {
+        status = audioHandle->configStruct->classCallback((class_handle_t)audioHandle,
+                                                          callbackEvent, message);
+    }
+
+    return status;
+}
+
+
+/*!
  * @brief ISO IN endpoint callback function.
  *
  * This callback function is used to notify uplayer the transfser result of a transfer.
@@ -187,26 +240,7 @@ usb_status_t USB_DeviceAudioIsochronousIn(usb_device_handle handle,
                                           usb_device_endpoint_callback_message_struct_t *message,
                                           void *callbackParam)
 {
-    usb_device_audio_struct_t *audioHandle;
-    usb_status_t status = kStatus_USB_Error;
-
-    /* Get the audio class handle */
-    audioHandle = (usb_device_audio_struct_t *)callbackParam;
-    if (NULL == audioHandle)
-    {
-        return kStatus_USB_InvalidHandle;
-    }
-    audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_IN] = 0U;
-    if ((NULL != audioHandle->configStruct) && (NULL != audioHandle->configStruct->classCallback))
-    {
-        /* Notify the application stream data sent by calling the audio class callback.
-        classCallback is initialized in classInit of s_UsbDeviceClassInterfaceMap,
-        it is from the second parameter of classInit */
-        status = audioHandle->configStruct->classCallback((class_handle_t)audioHandle,
-                                                          kUSB_DeviceAudioEventStreamSendResponse, message);
-    }
-
-    return status;
+    return USB_DeviceAudioIsochronous(handle, message, callbackParam, USB_AUDIO_STREAM_IN_ENDPOINT_TYPE);
 }
 
 /*!
@@ -226,25 +260,27 @@ usb_status_t USB_DeviceAudioIsochronousOut(usb_device_handle handle,
                                            usb_device_endpoint_callback_message_struct_t *message,
                                            void *callbackParam)
 {
-    usb_device_audio_struct_t *audioHandle;
-    usb_status_t status = kStatus_USB_Error;
+    return USB_DeviceAudioIsochronous(handle, message, callbackParam, USB_AUDIO_STREAM_OUT_ENDPOINT_TYPE);
+}
 
-    /* Get the audio class handle */
-    audioHandle = (usb_device_audio_struct_t *)callbackParam;
-    if (NULL == audioHandle)
-    {
-        return kStatus_USB_InvalidHandle;
-    }
-    audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_OUT] = 0U;
-
-    if ((NULL != audioHandle->configStruct) && (NULL != audioHandle->configStruct->classCallback))
-    {
-        /* classCallback is initialized in classInit of s_UsbDeviceClassInterfaceMap,
-        it is from the second parameter of classInit */
-        status = audioHandle->configStruct->classCallback((class_handle_t)audioHandle,
-                                                          kUSB_DeviceAudioEventStreamRecvResponse, message);
-    }
-    return status;
+/*!
+ * @brief ISO FEEDBACK endpoint callback function.
+ *
+ * This callback function is used to notify uplayer the transfser result of a transfer.
+ * This callback pointer is passed when the ISO IN pipe initialized.
+ *
+ * @param handle          The device handle. It equals the value returned from USB_DeviceInit.
+ * @param message         The result of the ISO IN pipe transfer.
+ * @param callbackParam  The parameter for this callback. It is same with
+ * usb_device_endpoint_callback_struct_t::callbackParam. In the class, the value is the audio class handle.
+ *
+ * @return A USB error code or kStatus_USB_Success.
+ */
+usb_status_t USB_DeviceAudioIsochronousInFeedback(usb_device_handle handle,
+                                                 usb_device_endpoint_callback_message_struct_t *message,
+                                                 void *callbackParam)
+{
+    return USB_DeviceAudioIsochronous(handle, message, callbackParam, USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT_TYPE);
 }
 
 /*!
@@ -326,7 +362,14 @@ usb_status_t USB_DeviceAudioStreamEndpointsInit(usb_device_audio_struct_t *audio
             (USB_IN == ((epInitStruct.endpointAddress & USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_MASK) >>
                         USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT)))
         {
-            epCallback.callbackFn = USB_DeviceAudioIsochronousIn;
+            if (USB_AUDIO_STREAM_IN_ENDPOINT_TYPE == interface->endpointList.endpoint[count].type)
+            {
+                epCallback.callbackFn = USB_DeviceAudioIsochronousIn;
+            }
+            else
+            {
+                epCallback.callbackFn = USB_DeviceAudioIsochronousInFeedback;
+            }
         }
         else
         {
@@ -373,19 +416,34 @@ usb_status_t USB_DeviceAudioStreamEndpointsDeinit(usb_device_audio_struct_t *aud
                 USB_DESCRIPTOR_ENDPOINT_ADDRESS_DIRECTION_SHIFT ==
             USB_IN)
         {
-            if (0U != audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_IN])
+            if (audioHandle->streamInterfaceHandle[type]->endpointList.endpoint[count].type == USB_AUDIO_STREAM_IN_ENDPOINT_TYPE)
             {
-                message.length = USB_CANCELLED_TRANSFER_LENGTH;
+                if (0U != audioHandle->isBusy[USB_AUDIO_STREAM_IN_ENDPOINT_TYPE])
+                {
+                    message.length = USB_CANCELLED_TRANSFER_LENGTH;
 #if (defined(USB_DEVICE_CONFIG_RETURN_VALUE_CHECK) && (USB_DEVICE_CONFIG_RETURN_VALUE_CHECK > 0U))
-                status = USB_DeviceAudioIsochronousIn(audioHandle->handle, &message, audioHandle);
+                    status = USB_DeviceAudioIsochronousIn(audioHandle->handle, &message, audioHandle);
 #else
-                (void)USB_DeviceAudioIsochronousIn(audioHandle->handle, &message, audioHandle);
+                    (void)USB_DeviceAudioIsochronousIn(audioHandle->handle, &message, audioHandle);
 #endif
+                }
+            }
+            else
+            {
+                if (0U != audioHandle->isBusy[USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT_TYPE])
+                {
+                    message.length = USB_CANCELLED_TRANSFER_LENGTH;
+#if (defined(USB_DEVICE_CONFIG_RETURN_VALUE_CHECK) && (USB_DEVICE_CONFIG_RETURN_VALUE_CHECK > 0U))
+                    status = USB_DeviceAudioIsochronousInFeedback(audioHandle->handle, &message, audioHandle);
+#else
+                    (void)USB_DeviceAudioIsochronousInFeedback(audioHandle->handle, &message, audioHandle);
+#endif
+                }
             }
         }
         else
         {
-            if (0U != audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_OUT])
+            if (0U != audioHandle->isBusy[USB_AUDIO_STREAM_OUT_ENDPOINT_TYPE])
             {
                 message.length = USB_CANCELLED_TRANSFER_LENGTH;
 #if (defined(USB_DEVICE_CONFIG_RETURN_VALUE_CHECK) && (USB_DEVICE_CONFIG_RETURN_VALUE_CHECK > 0U))
@@ -1225,8 +1283,9 @@ usb_status_t USB_DeviceAudioEvent(void *handle, uint32_t event, void *param)
         case kUSB_DeviceClassEventDeviceReset:
             /* Bus reset, clear the configuration. */
             audioHandle->configuration     = 0U;
-            audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_OUT] = 0U;
-            audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_IN]  = 0U;
+            audioHandle->isBusy[USB_AUDIO_STREAM_IN_ENDPOINT_TYPE] = 0U;
+            audioHandle->isBusy[USB_AUDIO_STREAM_OUT_ENDPOINT_TYPE] = 0U;
+            audioHandle->isBusy[USB_AUDIO_STREAM_IN_FEEDBACK_ENDPOINT_TYPE] = 0U;
             error                          = kStatus_USB_Success;
             break;
         case kUSB_DeviceClassEventSetConfiguration:
@@ -1559,6 +1618,7 @@ usb_status_t USB_DeviceAudioDeinit(class_handle_t handle)
  * @param endpointAddress Endpoint index.
  * @param buffer The memory address to hold the data need to be sent.
  * @param length The data length need to be sent.
+ * @param epType Endpoint type.
  *
  * @return A USB error code or kStatus_USB_Success.
  *
@@ -1570,7 +1630,7 @@ usb_status_t USB_DeviceAudioDeinit(class_handle_t handle)
  * The subsequent transfer could begin only when the previous transfer is done (get notification through the endpoint
  * callback).
  */
-usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8_t *buffer, uint32_t length)
+usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8_t *buffer, uint32_t length, uint8_t epType)
 {
     usb_device_audio_struct_t *audioHandle;
     usb_status_t error = kStatus_USB_Error;
@@ -1581,16 +1641,16 @@ usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8_t *buf
     }
     audioHandle = (usb_device_audio_struct_t *)handle;
 
-    if (0U != audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_IN])
+    if (0U != audioHandle->isBusy[epType])
     {
         return kStatus_USB_Busy;
     }
-    audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_IN] = 1U;
+    audioHandle->isBusy[epType] = 1U;
 
     error = USB_DeviceSendRequest(audioHandle->handle, ep, buffer, length);
     if (kStatus_USB_Success != error)
     {
-        audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_IN] = 0U;
+        audioHandle->isBusy[epType] = 0U;
     }
     return error;
 }
@@ -1605,6 +1665,7 @@ usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8_t *buf
  * @param endpointAddress Endpoint index.
  * @param buffer The memory address to save the received data.
  * @param length The data length want to be received.
+ * @param epType Endpoint type.
  *
  * @return A USB error code or kStatus_USB_Success.
  *
@@ -1616,7 +1677,7 @@ usb_status_t USB_DeviceAudioSend(class_handle_t handle, uint8_t ep, uint8_t *buf
  * The subsequent transfer could begin only when the previous transfer is done (get notification through the endpoint
  * callback).
  */
-usb_status_t USB_DeviceAudioRecv(class_handle_t handle, uint8_t ep, uint8_t *buffer, uint32_t length)
+usb_status_t USB_DeviceAudioRecv(class_handle_t handle, uint8_t ep, uint8_t *buffer, uint32_t length, uint8_t epType)
 {
     usb_device_audio_struct_t *audioHandle;
     usb_status_t error = kStatus_USB_Error;
@@ -1627,16 +1688,16 @@ usb_status_t USB_DeviceAudioRecv(class_handle_t handle, uint8_t ep, uint8_t *buf
     }
     audioHandle = (usb_device_audio_struct_t *)handle;
 
-    if (0U != audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_OUT])
+    if (0U != audioHandle->isBusy[epType])
     {
         return kStatus_USB_Busy;
     }
-    audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_OUT] = 1U;
+    audioHandle->isBusy[epType] = 1U;
 
     error = USB_DeviceRecvRequest(audioHandle->handle, ep, buffer, length);
     if (kStatus_USB_Success != error)
     {
-        audioHandle->streamPipeBusy[USB_AUDIO_INTERFACE_STREAM_OUT] = 0U;
+        audioHandle->isBusy[epType] = 0U;
     }
     return error;
 }
