@@ -6,9 +6,6 @@
  */
 
 // TODO: Manage reset
-// TODO: The endpoint should advertise a wMaxPacketSize of 448 (6+1 frames) to accomodate for adjustments (+/- 1)
-// TODO: Use a context struct to hold the vs_* variables (maybe)
-// TODO: We should only stay +/- 1 with respect to the 6 frames, not going lower than that
 
 #include "usb_device_config.h"
 #include "usb.h"

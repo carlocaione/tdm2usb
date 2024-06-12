@@ -6,8 +6,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-// TODO: Unify USB_DeviceAudioIsochronousOut/In/InFeedback
-
 #include "usb_device_config.h"
 #include "usb.h"
 #include "usb_device.h"

@@ -6,8 +6,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-// TODO: Better naming for IN/OUT
-
 #include "usb_device_config.h"
 #include "usb.h"
 #include "usb_device.h"
