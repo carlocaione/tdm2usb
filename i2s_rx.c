@@ -68,17 +68,17 @@
 #define USE_FILTER_32_DOWN (1)
 #define FILTER_32 (0xFFFFFF00)
 
-#define I2S_RX_FEEDBACK_TH_UP       (9U)
-#define I2S_RX_FEEDBACK_TH_DOWN     (4U)
+#define I2S_RX_FEEDBACK_TH_UP (9U)
+#define I2S_RX_FEEDBACK_TH_DOWN (4U)
 
-#define I2S_RX_FEEDBACK_TH_STEP     (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE)
-#define I2S_RX_FEEDBACK_NORMAL      (HS_ISO_IN_ENDP_PACKET_SIZE)
-
+#define I2S_RX_FEEDBACK_TH_STEP (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE)
+#define I2S_RX_FEEDBACK_NORMAL (HS_ISO_IN_ENDP_PACKET_SIZE)
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_usbBuffIn[USB_MAX_PACKET_IN_SIZE];
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_usbBuffIn[USB_MAX_PACKET_IN_SIZE];
 
 /* RX */
 static I2S_Type *s_i2sRxBase[] = {
@@ -104,7 +104,8 @@ static dma_handle_t s_dmaRxHandle[I2S_INST_NUM];
 static uint32_t s_rxAudioPos[I2S_INST_NUM];
 
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
-static struct {
+static struct
+{
     volatile uint8_t vs_rxNextBufIndex;
     volatile uint8_t vs_rxFirstInt;
     volatile uint8_t vs_rxFirstGet;
@@ -124,7 +125,7 @@ void USB_InPrintInfo(void)
 
     diff = (usb_ctx.vs_rxWriteDataCount - usb_ctx.vs_rxReadDataCount) / HS_ISO_IN_ENDP_PACKET_SIZE;
     usb_echo("[IN/RX] diff: %ld (vs_rxFirstInt: %d, vs_rxFirstGet: %d, vs_rxNextBufIndex: %d\n\r", diff,
-              usb_ctx.vs_rxFirstInt, usb_ctx.vs_rxFirstGet, usb_ctx.vs_rxNextBufIndex);
+             usb_ctx.vs_rxFirstInt, usb_ctx.vs_rxFirstGet, usb_ctx.vs_rxNextBufIndex);
 }
 
 uint32_t USB_GetFeedbackSize(void)
@@ -210,8 +211,8 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
         {
             uint32_t *pos = &s_rxAudioPos[inst];
 #if USE_FILTER_32_DOWN
-            uint32_t *outBuffer = (uint32_t *) (usbBuffer + k);
-            uint32_t *i2sBuffer = (uint32_t *) &s_i2sRxBuff[inst][*pos];
+            uint32_t *outBuffer = (uint32_t *)(usbBuffer + k);
+            uint32_t *i2sBuffer = (uint32_t *)&s_i2sRxBuff[inst][*pos];
 
             for (size_t ch = 0; ch < I2S_CH_NUM_PER_INST; ch++)
             {
@@ -326,7 +327,7 @@ void I2S_RxStop(void)
 /*!
  * @brief I2S RX start.
  */
- void I2S_RxStart(void)
+void I2S_RxStart(void)
 {
     I2S_RxCleanup();
 
@@ -367,7 +368,7 @@ static void I2S_RxSetupParams(i2s_config_t *rxConfig)
     I2S_RxGetDefaultConfig(rxConfig);
 
     rxConfig->masterSlave = kI2S_MasterSlaveNormalSlave; /** Normal Slave */
-    rxConfig->mode = kI2S_ModeDspWsShort; /** DSP mode, WS having one clock long pulse */
+    rxConfig->mode = kI2S_ModeDspWsShort;                /** DSP mode, WS having one clock long pulse */
     rxConfig->dataLength = TO_BITS(I2S_CH_LEN_DATA);
     rxConfig->frameLength = TO_BITS(I2S_FRAME_LEN);
 }
@@ -420,7 +421,7 @@ static void I2S_DMA_RxSetup(i2s_config_t *rxConfig)
          */
         if (inst == (I2S_INST_NUM - 1))
         {
-            I2S_RxTransferCreateHandleDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], &s_dmaRxHandle[inst], I2S_RxCallback, (void *) inst);
+            I2S_RxTransferCreateHandleDMA(s_i2sRxBase[inst], &s_i2sDmaRxHandle[inst], &s_dmaRxHandle[inst], I2S_RxCallback, (void *)inst);
         }
         else
         {
@@ -436,7 +437,7 @@ static void I2S_DMA_RxSetup(i2s_config_t *rxConfig)
  */
 void BOARD_I2S_RxInit(void)
 {
-    i2s_config_t rxConfig = { 0 };
+    i2s_config_t rxConfig = {0};
 
     I2S_RxSetupParams(&rxConfig);
     DMA_RxSetupChannels();

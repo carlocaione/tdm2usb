@@ -109,13 +109,13 @@
 #define configTIMER_TASK_STACK_DEPTH (configMINIMAL_STACK_SIZE * 2)
 
 /* Define to trap errors during development. */
-#define configASSERT(x)           \
-    if ((x) == 0)                 \
-    {                             \
-        taskDISABLE_INTERRUPTS(); \
-        for (;;)                  \
-            ;                     \
-    }
+#define configASSERT(x)       \
+  if ((x) == 0)               \
+  {                           \
+    taskDISABLE_INTERRUPTS(); \
+    for (;;)                  \
+      ;                       \
+  }
 
 /* Optional functions - most linkers will remove unused functions anyway. */
 #define INCLUDE_vTaskPrioritySet 1
@@ -137,31 +137,28 @@
 #define INCLUDE_xTaskResumeFromISR 1
 #define INCLUDE_xSemaphoreGetMutexHolder 1
 
-
-
-#if defined(__ICCARM__)||defined(__CC_ARM)||defined(__GNUC__)
-    /* Clock manager provides in this variable system core clock frequency */
-    #include <stdint.h>
-    extern uint32_t SystemCoreClock;
+#if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
+/* Clock manager provides in this variable system core clock frequency */
+#include <stdint.h>
+extern uint32_t SystemCoreClock;
 #endif
-
 
 #ifndef configENABLE_FPU
-  #define configENABLE_FPU                        1
+#define configENABLE_FPU 1
 #endif
 #ifndef configENABLE_MPU
-  #define configENABLE_MPU                        0
+#define configENABLE_MPU 0
 #endif
 #ifndef configENABLE_TRUSTZONE
-  #define configENABLE_TRUSTZONE                  0
+#define configENABLE_TRUSTZONE 0
 #endif
 #ifndef configRUN_FREERTOS_SECURE_ONLY
-  #define configRUN_FREERTOS_SECURE_ONLY          1
+#define configRUN_FREERTOS_SECURE_ONLY 1
 #endif
 
 /* Redefine: Mutex is needed for SRTM communication */
 #undef configUSE_MUTEXES
-#define configUSE_MUTEXES                       1
+#define configUSE_MUTEXES 1
 
 #ifndef configTOTAL_HEAP_SIZE
 #define configTOTAL_HEAP_SIZE ((size_t)(40 * 1024))

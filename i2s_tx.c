@@ -37,19 +37,20 @@
         m[0] = ((n << 4) & 0xFFU);                        \
         m[1] = (((n << 4) >> 8U) & 0xFFU);                \
         m[2] = (((n << 4) >> 16U) & 0xFFU);               \
-    }                                                     \
+    }
 
-#define I2S_TX_FEEDBACK_TH_UP       (9U)
-#define I2S_TX_FEEDBACK_TH_DOWN     (4U)
+#define I2S_TX_FEEDBACK_TH_UP (9U)
+#define I2S_TX_FEEDBACK_TH_DOWN (4U)
 
-#define I2S_TX_FEEDBACK_TH_STEP     (1U)
-#define I2S_TX_FEEDBACK_NORMAL      \
+#define I2S_TX_FEEDBACK_TH_STEP (1U)
+#define I2S_TX_FEEDBACK_NORMAL \
     ((HS_ISO_OUT_ENDP_PACKET_SIZE / (AUDIO_FORMAT_CHANNELS * AUDIO_FORMAT_SIZE)) << 13)
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE) uint8_t g_usbBuffOut[USB_MAX_PACKET_OUT_SIZE];
+USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+uint8_t g_usbBuffOut[USB_MAX_PACKET_OUT_SIZE];
 
 static I2S_Type *s_i2sTxBase[] = {
     I2S_TX_0,
@@ -74,7 +75,8 @@ static dma_handle_t s_dmaTxHandle[I2S_INST_NUM];
 static uint32_t s_txAudioPos[I2S_INST_NUM];
 
 USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
-static struct {
+static struct
+{
     volatile uint8_t vs_txNextBufIndex;
     volatile uint8_t vs_txI2sStarted;
     volatile uint8_t vs_txUsbStarted;
@@ -84,7 +86,8 @@ static struct {
     volatile uint32_t vs_txFeedback;
 } usb_ctx;
 
-USB_RAM_ADDRESS_ALIGNMENT(4) uint8_t audioFeedBackBuffer[4];
+USB_RAM_ADDRESS_ALIGNMENT(4)
+uint8_t audioFeedBackBuffer[4];
 
 /*******************************************************************************
  * Code
@@ -110,7 +113,7 @@ uint32_t USB_GetFeedback(uint8_t speed)
 {
     AUDIO_UPDATE_FEEDBACK_DATA(speed, audioFeedBackBuffer, usb_ctx.vs_txFeedback);
 
-    return *((uint32_t *) &audioFeedBackBuffer[0]);
+    return *((uint32_t *)&audioFeedBackBuffer[0]);
 }
 
 /*!
@@ -263,7 +266,7 @@ void I2S_TxStop(void)
 /*!
  * @brief I2S TX start.
  */
- void I2S_TxStart(void)
+void I2S_TxStart(void)
 {
     I2S_TxCleanup();
 
@@ -306,7 +309,7 @@ static void I2S_TxSetupParams(i2s_config_t *txConfig)
     I2S_TxGetDefaultConfig(txConfig);
 
     txConfig->masterSlave = kI2S_MasterSlaveNormalSlave; /** Normal Slave */
-    txConfig->mode = kI2S_ModeDspWsShort; /** DSP mode, WS having one clock long pulse */
+    txConfig->mode = kI2S_ModeDspWsShort;                /** DSP mode, WS having one clock long pulse */
     txConfig->dataLength = TO_BITS(I2S_CH_LEN_DATA);
     txConfig->frameLength = TO_BITS(I2S_FRAME_LEN);
 }
@@ -351,7 +354,7 @@ static void I2S_DMA_TxSetup(i2s_config_t *txConfig)
 
         if (inst == (I2S_INST_NUM - 1))
         {
-            I2S_TxTransferCreateHandleDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst], &s_dmaTxHandle[inst], I2S_TxCallback, (void *) s_i2sTxTransfer[inst]);
+            I2S_TxTransferCreateHandleDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst], &s_dmaTxHandle[inst], I2S_TxCallback, (void *)s_i2sTxTransfer[inst]);
         }
         else
         {
@@ -367,7 +370,7 @@ static void I2S_DMA_TxSetup(i2s_config_t *txConfig)
  */
 void BOARD_I2S_TxInit(void)
 {
-    i2s_config_t txConfig = { 0 };
+    i2s_config_t txConfig = {0};
 
     I2S_TxSetupParams(&txConfig);
     DMA_TxSetupChannels();

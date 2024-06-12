@@ -296,8 +296,8 @@ typedef usb_status_t (*usb_device_class_event_callback_t)(void *classHandle, uin
 /*! @brief Define class driver interface structure. */
 typedef struct _usb_device_class_map
 {
-    usb_device_class_init_call_t classInit;     /*!< Class driver initialization- entry  of the class driver */
-    usb_device_class_deinit_call_t classDeinit; /*!< Class driver de-initialization*/
+    usb_device_class_init_call_t classInit;               /*!< Class driver initialization- entry  of the class driver */
+    usb_device_class_deinit_call_t classDeinit;           /*!< Class driver de-initialization*/
     usb_device_class_event_callback_t classEventCallback; /*!< Class driver event callback*/
     usb_device_class_type_t type;                         /*!< Class type*/
 } usb_device_class_map_t;
@@ -324,112 +324,113 @@ typedef struct _usb_device_common_class_struct
  ******************************************************************************/
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
-/*!
- * @brief Initializes the common class and the supported classes.
- *
- * This function is used to initialize the common class and the supported classes.
- *
- * @param[in] controllerId   The controller ID of the USB IP. See the enumeration #usb_controller_index_t.
- * @param[in] configList     The class configurations. The pointer must point to the global variable.
- *                           See the structure #usb_device_class_config_list_struct_t.
- * @param[out] handle        A parameter used to return pointer of the device handle to the caller.
- *                           The value of the parameter is a pointer to the device handle. This design is used to
- *                           make a simple device align with the composite device. For the composite device, there are
- * many
- *                           kinds of class handles. However, there is only one device handle. Therefore, the handle
- * points to
- *                           a device instead of a class. The class handle can be received from the
- *                           #usb_device_class_config_struct_t::classHandle after the function successfully.
- *
- * @return A USB error code or kStatus_USB_Success.
- */
-usb_status_t USB_DeviceClassInit(uint8_t controllerId,
-                                 usb_device_class_config_list_struct_t *configList,
-                                 usb_device_handle *handle);
+    /*!
+     * @brief Initializes the common class and the supported classes.
+     *
+     * This function is used to initialize the common class and the supported classes.
+     *
+     * @param[in] controllerId   The controller ID of the USB IP. See the enumeration #usb_controller_index_t.
+     * @param[in] configList     The class configurations. The pointer must point to the global variable.
+     *                           See the structure #usb_device_class_config_list_struct_t.
+     * @param[out] handle        A parameter used to return pointer of the device handle to the caller.
+     *                           The value of the parameter is a pointer to the device handle. This design is used to
+     *                           make a simple device align with the composite device. For the composite device, there are
+     * many
+     *                           kinds of class handles. However, there is only one device handle. Therefore, the handle
+     * points to
+     *                           a device instead of a class. The class handle can be received from the
+     *                           #usb_device_class_config_struct_t::classHandle after the function successfully.
+     *
+     * @return A USB error code or kStatus_USB_Success.
+     */
+    usb_status_t USB_DeviceClassInit(uint8_t controllerId,
+                                     usb_device_class_config_list_struct_t *configList,
+                                     usb_device_handle *handle);
 
-/*!
- * @brief Deinitializes the common class and the supported classes.
- *
- * This function is used to deinitialize the common class and the supported classes.
- *
- * @param[in] controllerId   The controller ID of the USB IP. See the enumeration #usb_controller_index_t.
- *
- * @return A USB error code or kStatus_USB_Success.
- */
-usb_status_t USB_DeviceClassDeinit(uint8_t controllerId);
+    /*!
+     * @brief Deinitializes the common class and the supported classes.
+     *
+     * This function is used to deinitialize the common class and the supported classes.
+     *
+     * @param[in] controllerId   The controller ID of the USB IP. See the enumeration #usb_controller_index_t.
+     *
+     * @return A USB error code or kStatus_USB_Success.
+     */
+    usb_status_t USB_DeviceClassDeinit(uint8_t controllerId);
 
-/*!
- * @brief Gets the USB bus speed.
- *
- * This function is used to get the USB bus speed.
- *
- * @param[in] controllerId   The controller ID of the USB IP. See the enumeration #usb_controller_index_t.
- * @param[out] speed           It is an OUT parameter, which returns the current speed of the controller.
- *
- * @return A USB error code or kStatus_USB_Success.
- */
-usb_status_t USB_DeviceClassGetSpeed(uint8_t controllerId, uint8_t *speed);
+    /*!
+     * @brief Gets the USB bus speed.
+     *
+     * This function is used to get the USB bus speed.
+     *
+     * @param[in] controllerId   The controller ID of the USB IP. See the enumeration #usb_controller_index_t.
+     * @param[out] speed           It is an OUT parameter, which returns the current speed of the controller.
+     *
+     * @return A USB error code or kStatus_USB_Success.
+     */
+    usb_status_t USB_DeviceClassGetSpeed(uint8_t controllerId, uint8_t *speed);
 
-/*!
- * @brief Handles the event passed to the class drivers.
- *
- * This function handles the event passed to the class drivers.
- *
- * @param[in] handle          The device handle received from the #USB_DeviceInit.
- * @param[in] event           The event codes. See the enumeration #usb_device_class_event_t.
- * @param[in,out] param           The parameter type is determined by the event code.
- *
- * @return A USB error code or kStatus_USB_Success.
- * @retval kStatus_USB_Success              A valid request has been handled.
- * @retval kStatus_USB_InvalidParameter     The device handle not be found.
- * @retval kStatus_USB_InvalidRequest       The request is invalid, and the control pipe is stalled by the caller.
- */
-usb_status_t USB_DeviceClassEvent(usb_device_handle handle, usb_device_class_event_t event, void *param);
+    /*!
+     * @brief Handles the event passed to the class drivers.
+     *
+     * This function handles the event passed to the class drivers.
+     *
+     * @param[in] handle          The device handle received from the #USB_DeviceInit.
+     * @param[in] event           The event codes. See the enumeration #usb_device_class_event_t.
+     * @param[in,out] param           The parameter type is determined by the event code.
+     *
+     * @return A USB error code or kStatus_USB_Success.
+     * @retval kStatus_USB_Success              A valid request has been handled.
+     * @retval kStatus_USB_InvalidParameter     The device handle not be found.
+     * @retval kStatus_USB_InvalidRequest       The request is invalid, and the control pipe is stalled by the caller.
+     */
+    usb_status_t USB_DeviceClassEvent(usb_device_handle handle, usb_device_class_event_t event, void *param);
 
-/*!
- * @brief Handles the common class callback.
- *
- * This function handles the common class callback.
- *
- * @param[in] handle          The device handle received from the #USB_DeviceInit.
- * @param[in] event           The event codes. See the enumeration #usb_device_event_t.
- * @param[in,out] param           The parameter type is determined by the event code.
- *
- * @return A USB error code or kStatus_USB_Success.
- */
-usb_status_t USB_DeviceClassCallback(usb_device_handle handle, uint32_t event, void *param);
+    /*!
+     * @brief Handles the common class callback.
+     *
+     * This function handles the common class callback.
+     *
+     * @param[in] handle          The device handle received from the #USB_DeviceInit.
+     * @param[in] event           The event codes. See the enumeration #usb_device_event_t.
+     * @param[in,out] param           The parameter type is determined by the event code.
+     *
+     * @return A USB error code or kStatus_USB_Success.
+     */
+    usb_status_t USB_DeviceClassCallback(usb_device_handle handle, uint32_t event, void *param);
 
-/*!
- * @brief Gets the device handle according to the controller ID.
- *
- * This function gets the device handle according to the controller ID.
- *
- * @param[in] controllerId   The controller ID of the USB IP. See the enumeration #usb_controller_index_t.
- * @param[out] handle          An out parameter used to return the pointer of the device handle to the caller.
- *
- * @retval kStatus_USB_Success              Get device handle successfully.
- * @retval kStatus_USB_InvalidParameter     The device handle can't be found.
- */
-usb_status_t USB_DeviceClassGetDeviceHandle(uint8_t controllerId, usb_device_handle *handle);
+    /*!
+     * @brief Gets the device handle according to the controller ID.
+     *
+     * This function gets the device handle according to the controller ID.
+     *
+     * @param[in] controllerId   The controller ID of the USB IP. See the enumeration #usb_controller_index_t.
+     * @param[out] handle          An out parameter used to return the pointer of the device handle to the caller.
+     *
+     * @retval kStatus_USB_Success              Get device handle successfully.
+     * @retval kStatus_USB_InvalidParameter     The device handle can't be found.
+     */
+    usb_status_t USB_DeviceClassGetDeviceHandle(uint8_t controllerId, usb_device_handle *handle);
 
 #if defined(USB_DEVICE_CONFIG_GET_SOF_COUNT) && (USB_DEVICE_CONFIG_GET_SOF_COUNT > 0U)
-/*!
- * @brief Get the USB SOF count.
- *
- * This function is used to get the USB SOF count.
- *
- * @param controllerId   The controller id of the USB IP. Please refer to the enumeration usb_controller_index_t.
- * @param currentFrameCount           It is an OUT parameter, return current sof count of the controller.
- *                                    HS: micro frame count, FS: frame count
- *
- * @return A USB error code or kStatus_USB_Success.
- */
-usb_status_t USB_DeviceClassGetCurrentFrameCount(uint8_t controllerId,       /*!< [IN] Controller ID */
-                                                 uint32_t *currentFrameCount /*!< [OUT] Current frame count */
-);
+    /*!
+     * @brief Get the USB SOF count.
+     *
+     * This function is used to get the USB SOF count.
+     *
+     * @param controllerId   The controller id of the USB IP. Please refer to the enumeration usb_controller_index_t.
+     * @param currentFrameCount           It is an OUT parameter, return current sof count of the controller.
+     *                                    HS: micro frame count, FS: frame count
+     *
+     * @return A USB error code or kStatus_USB_Success.
+     */
+    usb_status_t USB_DeviceClassGetCurrentFrameCount(uint8_t controllerId,       /*!< [IN] Controller ID */
+                                                     uint32_t *currentFrameCount /*!< [OUT] Current frame count */
+    );
 #endif
 
 #if defined(__cplusplus)

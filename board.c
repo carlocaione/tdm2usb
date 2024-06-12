@@ -68,12 +68,12 @@ static status_t flexspi_hyper_ram_write_mcr(FLEXSPI_Type *base, uint8_t regAddr,
 
     /* Write data */
     flashXfer.deviceAddress = regAddr;
-    flashXfer.port          = kFLEXSPI_PortA1;
-    flashXfer.cmdType       = kFLEXSPI_Write;
-    flashXfer.SeqNumber     = 1;
-    flashXfer.seqIndex      = 3;
-    flashXfer.data          = mrVal;
-    flashXfer.dataSize      = 1;
+    flashXfer.port = kFLEXSPI_PortA1;
+    flashXfer.cmdType = kFLEXSPI_Write;
+    flashXfer.SeqNumber = 1;
+    flashXfer.seqIndex = 3;
+    flashXfer.data = mrVal;
+    flashXfer.dataSize = 1;
 
     status = FLEXSPI_TransferBlocking(base, &flashXfer);
 
@@ -87,12 +87,12 @@ static status_t flexspi_hyper_ram_get_mcr(FLEXSPI_Type *base, uint8_t regAddr, u
 
     /* Read data */
     flashXfer.deviceAddress = regAddr;
-    flashXfer.port          = kFLEXSPI_PortA1;
-    flashXfer.cmdType       = kFLEXSPI_Read;
-    flashXfer.SeqNumber     = 1;
-    flashXfer.seqIndex      = 2;
-    flashXfer.data          = mrVal;
-    flashXfer.dataSize      = 2;
+    flashXfer.port = kFLEXSPI_PortA1;
+    flashXfer.cmdType = kFLEXSPI_Read;
+    flashXfer.SeqNumber = 1;
+    flashXfer.seqIndex = 2;
+    flashXfer.data = mrVal;
+    flashXfer.dataSize = 2;
 
     status = FLEXSPI_TransferBlocking(base, &flashXfer);
 
@@ -106,10 +106,10 @@ static status_t flexspi_hyper_ram_reset(FLEXSPI_Type *base)
 
     /* Write data */
     flashXfer.deviceAddress = 0x0U;
-    flashXfer.port          = kFLEXSPI_PortA1;
-    flashXfer.cmdType       = kFLEXSPI_Command;
-    flashXfer.SeqNumber     = 1;
-    flashXfer.seqIndex      = 4;
+    flashXfer.port = kFLEXSPI_PortA1;
+    flashXfer.cmdType = kFLEXSPI_Command;
+    flashXfer.SeqNumber = 1;
+    flashXfer.seqIndex = 4;
 
     status = FLEXSPI_TransferBlocking(base, &flashXfer);
 
@@ -128,23 +128,23 @@ static status_t flexspi_hyper_ram_reset(FLEXSPI_Type *base)
 status_t BOARD_InitPsRam(void)
 {
     flexspi_device_config_t deviceconfig = {
-        .flexspiRootClk       = 396000000, /* 396MHZ SPI serial clock, DDR serial clock 198M */
-        .isSck2Enabled        = false,
-        .flashSize            = 0x2000,    /* 64Mb/KByte */
-        .CSIntervalUnit       = kFLEXSPI_CsIntervalUnit1SckCycle,
-        .CSInterval           = 5,
-        .CSHoldTime           = 3,
-        .CSSetupTime          = 3,
-        .dataValidTime        = 1,
-        .columnspace          = 0,
-        .enableWordAddress    = false,
-        .AWRSeqIndex          = 1,
-        .AWRSeqNumber         = 1,
-        .ARDSeqIndex          = 0,
-        .ARDSeqNumber         = 1,
-        .AHBWriteWaitUnit     = kFLEXSPI_AhbWriteWaitUnit2AhbCycle,
+        .flexspiRootClk = 396000000, /* 396MHZ SPI serial clock, DDR serial clock 198M */
+        .isSck2Enabled = false,
+        .flashSize = 0x2000, /* 64Mb/KByte */
+        .CSIntervalUnit = kFLEXSPI_CsIntervalUnit1SckCycle,
+        .CSInterval = 5,
+        .CSHoldTime = 3,
+        .CSSetupTime = 3,
+        .dataValidTime = 1,
+        .columnspace = 0,
+        .enableWordAddress = false,
+        .AWRSeqIndex = 1,
+        .AWRSeqNumber = 1,
+        .ARDSeqIndex = 0,
+        .ARDSeqNumber = 1,
+        .AHBWriteWaitUnit = kFLEXSPI_AhbWriteWaitUnit2AhbCycle,
         .AHBWriteWaitInterval = 0,
-        .enableWriteMask      = true,
+        .enableWriteMask = true,
     };
 
     uint32_t customLUT[64] = {
@@ -212,9 +212,9 @@ status_t BOARD_InitPsRam(void)
     /* Init FLEXSPI. */
     config.rxSampleClock = kFLEXSPI_ReadSampleClkExternalInputFromDqsPad;
     /*Set AHB buffer size for reading data through AHB bus. */
-    config.ahbConfig.enableAHBPrefetch    = true;
-    config.ahbConfig.enableAHBBufferable  = true;
-    config.ahbConfig.enableAHBCachable    = true;
+    config.ahbConfig.enableAHBPrefetch = true;
+    config.ahbConfig.enableAHBBufferable = true;
+    config.ahbConfig.enableAHBCachable = true;
     config.ahbConfig.enableReadAddressOpt = true;
     for (uint8_t i = 1; i < FSL_FEATURE_FLEXSPI_AHB_BUFFER_COUNT - 1; i++)
     {
@@ -223,10 +223,10 @@ status_t BOARD_InitPsRam(void)
     /* FlexSPI has total 1KB RX buffer.
      * Set DMA0 master to use AHB Rx Buffer0.
      */
-    config.ahbConfig.buffer[0].masterIndex    = 4;   /* DMA0 */
-    config.ahbConfig.buffer[0].bufferSize     = 512; /* Allocate 512B bytes for DMA0 */
+    config.ahbConfig.buffer[0].masterIndex = 4;  /* DMA0 */
+    config.ahbConfig.buffer[0].bufferSize = 512; /* Allocate 512B bytes for DMA0 */
     config.ahbConfig.buffer[0].enablePrefetch = true;
-    config.ahbConfig.buffer[0].priority       = 0;
+    config.ahbConfig.buffer[0].priority = 0;
     /* All other masters use last buffer with 512B bytes. */
     config.ahbConfig.buffer[FSL_FEATURE_FLEXSPI_AHB_BUFFER_COUNT - 1].bufferSize = 512;
 #if !(defined(FSL_FEATURE_FLEXSPI_HAS_NO_MCR0_COMBINATIONEN) && FSL_FEATURE_FLEXSPI_HAS_NO_MCR0_COMBINATIONEN)
@@ -265,7 +265,7 @@ status_t BOARD_InitPsRam(void)
     /* Enable RBX, burst length set to 1K. - MR8 */
     mr8Val[0] = (mr4mr8[0] & 0xFF00U) >> 8U;
     mr8Val[0] = mr8Val[0] | 0x0F;
-    status    = flexspi_hyper_ram_write_mcr(BOARD_FLEXSPI_PSRAM, 0x8, mr8Val);
+    status = flexspi_hyper_ram_write_mcr(BOARD_FLEXSPI_PSRAM, 0x8, mr8Val);
     if (status != kStatus_Success)
     {
         return status;
@@ -274,7 +274,7 @@ status_t BOARD_InitPsRam(void)
     /* Set LC code to 0x04(LC=7, maximum frequency 200M) - MR0. */
     mr0Val[0] = mr0mr1[0] & 0x00FFU;
     mr0Val[0] = (mr0Val[0] & ~0x3CU) | (4U << 2U);
-    status    = flexspi_hyper_ram_write_mcr(BOARD_FLEXSPI_PSRAM, 0x0, mr0Val);
+    status = flexspi_hyper_ram_write_mcr(BOARD_FLEXSPI_PSRAM, 0x0, mr0Val);
     if (status != kStatus_Success)
     {
         return status;
@@ -283,7 +283,7 @@ status_t BOARD_InitPsRam(void)
     /* Set WLC code to 0x01(WLC=7, maximum frequency 200M) - MR4. */
     mr4Val[0] = mr4mr8[0] & 0x00FFU;
     mr4Val[0] = (mr4Val[0] & ~0xE0U) | (1U << 5U);
-    status    = flexspi_hyper_ram_write_mcr(BOARD_FLEXSPI_PSRAM, 0x4, mr4Val);
+    status = flexspi_hyper_ram_write_mcr(BOARD_FLEXSPI_PSRAM, 0x4, mr4Val);
     if (status != kStatus_Success)
     {
         return status;
@@ -327,7 +327,7 @@ void BOARD_InitXip(FLEXSPI_Type *base)
     if (0U != (base->DLLCR[0] & FLEXSPI_DLLCR_DLLEN_MASK))
     {
         lastStatus = base->STS2;
-        retry      = BOARD_FLEXSPI_DLL_LOCK_RETRY;
+        retry = BOARD_FLEXSPI_DLL_LOCK_RETRY;
         /* Flash on port A */
         if (((base->FLSHCR0[0] & FLEXSPI_FLSHCR0_FLSHSZ_MASK) > 0) ||
             ((base->FLSHCR0[1] & FLEXSPI_FLSHCR0_FLSHSZ_MASK) > 0))
@@ -357,7 +357,7 @@ void BOARD_InitXip(FLEXSPI_Type *base)
             }
             else
             {
-                retry      = BOARD_FLEXSPI_DLL_LOCK_RETRY;
+                retry = BOARD_FLEXSPI_DLL_LOCK_RETRY;
                 lastStatus = status;
             }
         } while (retry > 0);
@@ -410,9 +410,9 @@ void BOARD_FlexspiClockSafeConfig(void)
 void BOARD_SetDeepSleepPinConfig(void)
 {
     /* Backup Pin configuration. */
-    s_ispPin[0]     = IOPCTL->PIO[1][15];
-    s_ispPin[1]     = IOPCTL->PIO[1][16];
-    s_ispPin[2]     = IOPCTL->PIO[1][17];
+    s_ispPin[0] = IOPCTL->PIO[1][15];
+    s_ispPin[1] = IOPCTL->PIO[1][16];
+    s_ispPin[2] = IOPCTL->PIO[1][17];
     s_flexspiPin[0] = IOPCTL->PIO[1][29];
     s_flexspiPin[1] = IOPCTL->PIO[2][19];
     s_flexspiPin[2] = IOPCTL->PIO[1][11];
@@ -497,13 +497,13 @@ status_t BOARD_I2C_Send(I2C_Type *base,
     i2c_master_transfer_t masterXfer;
 
     /* Prepare transfer structure. */
-    masterXfer.slaveAddress   = deviceAddress;
-    masterXfer.direction      = kI2C_Write;
-    masterXfer.subaddress     = subAddress;
+    masterXfer.slaveAddress = deviceAddress;
+    masterXfer.direction = kI2C_Write;
+    masterXfer.subaddress = subAddress;
     masterXfer.subaddressSize = subaddressSize;
-    masterXfer.data           = txBuff;
-    masterXfer.dataSize       = txBuffSize;
-    masterXfer.flags          = kI2C_TransferDefaultFlag;
+    masterXfer.data = txBuff;
+    masterXfer.dataSize = txBuffSize;
+    masterXfer.flags = kI2C_TransferDefaultFlag;
 
     return I2C_MasterTransferBlocking(base, &masterXfer);
 }
@@ -518,13 +518,13 @@ status_t BOARD_I2C_Receive(I2C_Type *base,
     i2c_master_transfer_t masterXfer;
 
     /* Prepare transfer structure. */
-    masterXfer.slaveAddress   = deviceAddress;
-    masterXfer.subaddress     = subAddress;
+    masterXfer.slaveAddress = deviceAddress;
+    masterXfer.subaddress = subAddress;
     masterXfer.subaddressSize = subaddressSize;
-    masterXfer.data           = rxBuff;
-    masterXfer.dataSize       = rxBuffSize;
-    masterXfer.direction      = kI2C_Read;
-    masterXfer.flags          = kI2C_TransferDefaultFlag;
+    masterXfer.data = rxBuff;
+    masterXfer.dataSize = rxBuffSize;
+    masterXfer.direction = kI2C_Read;
+    masterXfer.flags = kI2C_TransferDefaultFlag;
 
     return I2C_MasterTransferBlocking(base, &masterXfer);
 }
@@ -549,14 +549,14 @@ status_t BOARD_I3C_Send(I3C_Type *base,
     i3c_master_transfer_t masterXfer;
 
     /* Prepare transfer structure. */
-    masterXfer.slaveAddress   = deviceAddress;
-    masterXfer.direction      = kI3C_Write;
-    masterXfer.busType        = kI3C_TypeI2C;
-    masterXfer.subaddress     = subAddress;
+    masterXfer.slaveAddress = deviceAddress;
+    masterXfer.direction = kI3C_Write;
+    masterXfer.busType = kI3C_TypeI2C;
+    masterXfer.subaddress = subAddress;
     masterXfer.subaddressSize = subaddressSize;
-    masterXfer.data           = txBuff;
-    masterXfer.dataSize       = txBuffSize;
-    masterXfer.flags          = kI3C_TransferDefaultFlag;
+    masterXfer.data = txBuff;
+    masterXfer.dataSize = txBuffSize;
+    masterXfer.flags = kI3C_TransferDefaultFlag;
 
     return I3C_MasterTransferBlocking(base, &masterXfer);
 }
@@ -571,14 +571,14 @@ status_t BOARD_I3C_Receive(I3C_Type *base,
     i3c_master_transfer_t masterXfer;
 
     /* Prepare transfer structure. */
-    masterXfer.slaveAddress   = deviceAddress;
-    masterXfer.subaddress     = subAddress;
+    masterXfer.slaveAddress = deviceAddress;
+    masterXfer.subaddress = subAddress;
     masterXfer.subaddressSize = subaddressSize;
-    masterXfer.data           = rxBuff;
-    masterXfer.dataSize       = rxBuffSize;
-    masterXfer.direction      = kI3C_Read;
-    masterXfer.busType        = kI3C_TypeI2C;
-    masterXfer.flags          = kI3C_TransferDefaultFlag;
+    masterXfer.data = rxBuff;
+    masterXfer.dataSize = rxBuffSize;
+    masterXfer.direction = kI3C_Read;
+    masterXfer.busType = kI3C_TypeI2C;
+    masterXfer.flags = kI3C_TransferDefaultFlag;
 
     return I3C_MasterTransferBlocking(base, &masterXfer);
 }

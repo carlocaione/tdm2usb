@@ -16,14 +16,15 @@
  **********************************************************************************************************************/
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
-/*!
- * @brief Calls initialization functions.
- *
- */
-void BOARD_InitBootPins(void);
+    /*!
+     * @brief Calls initialization functions.
+     *
+     */
+    void BOARD_InitBootPins(void);
 
 #define IOPCTL_PIO_ANAMUX_DI 0x00u        /*!<@brief Analog mux is disabled */
 #define IOPCTL_PIO_FULLDRIVE_DI 0x00u     /*!<@brief Normal drive */
@@ -41,36 +42,36 @@ void BOARD_InitBootPins(void);
 /*! @name FC5_SCK (coord G16), I2S_CLK
   @{ */
 /* Routed pin properties */
-#define BOARD_INITPINS_I2S_CLK_PERIPHERAL FLEXCOMM5              /*!<@brief Peripheral name */
-#define BOARD_INITPINS_I2S_CLK_SIGNAL SCK                        /*!<@brief Signal name */
-                                                                 /* @} */
+#define BOARD_INITPINS_I2S_CLK_PERIPHERAL FLEXCOMM5 /*!<@brief Peripheral name */
+#define BOARD_INITPINS_I2S_CLK_SIGNAL SCK           /*!<@brief Signal name */
+                                                    /* @} */
 
 /*! @name FC5_TXD_SCL_MISO_WS (coord G17), I2S_FYNC
   @{ */
 /* Routed pin properties */
-#define BOARD_INITPINS_I2S_FSYNC_PERIPHERAL FLEXCOMM5              /*!<@brief Peripheral name */
-#define BOARD_INITPINS_I2S_FSYNC_SIGNAL TXD_SCL_MISO_WS            /*!<@brief Signal name */
-                                                                   /* @} */
+#define BOARD_INITPINS_I2S_FSYNC_PERIPHERAL FLEXCOMM5   /*!<@brief Peripheral name */
+#define BOARD_INITPINS_I2S_FSYNC_SIGNAL TXD_SCL_MISO_WS /*!<@brief Signal name */
+                                                        /* @} */
 
 /*! @name FC5_RXD_SDA_MOSI_DATA (coord J16), I2S_SDIN
   @{ */
 /* Routed pin properties */
-#define BOARD_INITPINS_I2S_SDIN_PERIPHERAL FLEXCOMM5              /*!<@brief Peripheral name */
-#define BOARD_INITPINS_I2S_SDIN_SIGNAL RXD_SDA_MOSI_DATA          /*!<@brief Signal name */
-                                                                  /* @} */
+#define BOARD_INITPINS_I2S_SDIN_PERIPHERAL FLEXCOMM5     /*!<@brief Peripheral name */
+#define BOARD_INITPINS_I2S_SDIN_SIGNAL RXD_SDA_MOSI_DATA /*!<@brief Signal name */
+                                                         /* @} */
 
 /*! @name FC4_RXD_SDA_MOSI_DATA (coord C11), I2S_SDOUT
   @{ */
 /* Routed pin properties */
-#define BOARD_INITPINS_I2S_SDOUT_PERIPHERAL FLEXCOMM4               /*!<@brief Peripheral name */
-#define BOARD_INITPINS_I2S_SDOUT_SIGNAL RXD_SDA_MOSI_DATA           /*!<@brief Signal name */
-                                                                    /* @} */
+#define BOARD_INITPINS_I2S_SDOUT_PERIPHERAL FLEXCOMM4     /*!<@brief Peripheral name */
+#define BOARD_INITPINS_I2S_SDOUT_SIGNAL RXD_SDA_MOSI_DATA /*!<@brief Signal name */
+                                                          /* @} */
 
-/*!
- * @brief Configures pin routing and optionally pin electrical features.
- *
- */
-void BOARD_InitPins(void); /* Function assigned for the Cortex-M33 */
+    /*!
+     * @brief Configures pin routing and optionally pin electrical features.
+     *
+     */
+    void BOARD_InitPins(void); /* Function assigned for the Cortex-M33 */
 
 #if defined(__cplusplus)
 }

@@ -139,16 +139,16 @@ sources:
  * Variables for BOARD_BootClockRUN configuration
  ******************************************************************************/
 const clock_sys_pll_config_t g_sysPllConfig_BOARD_BootClockRUN = {
-    .sys_pll_src  = kCLOCK_SysPllXtalIn, /* OSC clock */
-    .numerator    = 0,                   /* Numerator of the SYSPLL0 fractional loop divider isnull */
-    .denominator  = 1,                   /* Denominator of the SYSPLL0 fractional loop divider isnull */
-    .sys_pll_mult = kCLOCK_SysPllMult22  /* Divide by 22 */
+    .sys_pll_src = kCLOCK_SysPllXtalIn, /* OSC clock */
+    .numerator = 0,                     /* Numerator of the SYSPLL0 fractional loop divider isnull */
+    .denominator = 1,                   /* Denominator of the SYSPLL0 fractional loop divider isnull */
+    .sys_pll_mult = kCLOCK_SysPllMult22 /* Divide by 22 */
 };
 const clock_audio_pll_config_t g_audioPllConfig_BOARD_BootClockRUN = {
-    .audio_pll_src  = kCLOCK_AudioPllXtalIn, /* OSC clock */
-    .numerator      = 5040,                  /* Numerator of the Audio PLL fractional loop divider is null */
-    .denominator    = 27000,                 /* Denominator of the Audio PLL fractional loop divider is null */
-    .audio_pll_mult = kCLOCK_AudioPllMult22  /* Divide by 22 */
+    .audio_pll_src = kCLOCK_AudioPllXtalIn, /* OSC clock */
+    .numerator = 5040,                      /* Numerator of the Audio PLL fractional loop divider is null */
+    .denominator = 27000,                   /* Denominator of the Audio PLL fractional loop divider is null */
+    .audio_pll_mult = kCLOCK_AudioPllMult22 /* Divide by 22 */
 };
 /*******************************************************************************
  * Code for BOARD_BootClockRUN configuration
