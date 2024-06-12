@@ -12,9 +12,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-/*! @brief Whether USB Audio use syn mode or not, note that some socs may not support sync mode */
-#define USB_DEVICE_AUDIO_USE_SYNC_MODE (0U)
-
 #define USB_DEVICE_VID (0x1FC9U)
 #define USB_DEVICE_PID (0x0097U)
 

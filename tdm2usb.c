@@ -40,9 +40,7 @@
 #endif
 
 #include "fsl_power.h"
-#if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
-#include "fsl_sctimer.h"
-#endif
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -57,18 +55,9 @@ void USB_DeviceTaskFn(void *deviceHandle);
 usb_status_t USB_DeviceAudioCallback(class_handle_t handle, uint32_t event, void *param);
 usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *param);
 
-#if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
-extern void SCTIMER_CaptureInit(void);
-#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-#if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
-static uint32_t eventCounterU = 0;
-static uint32_t captureRegisterNumber;
-static sctimer_config_t sctimerInfo;
-#endif
-
 static uint8_t usbAudioFeedBackBuffer[4];
 
 extern usb_audio_device_struct_t g_audioDevice;
@@ -122,15 +111,6 @@ usb_audio_device_struct_t g_audioDevice = {
     .currentInterfaceAlternateSetting = {0, 0, 0},
     .speed = USB_SPEED_FULL,
     .attach = 0U,
-#if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
-    .generatorIntervalCount = 0,
-    .curAudioPllFrac = 0,
-    .audioPllTicksPrev = 0,
-    .audioPllTicksDiff = 0,
-    .audioPllTicksEma = AUDIO_PLL_USB1_SOF_INTERVAL_COUNT,
-    .audioPllTickEmaFrac = 0,
-    .audioPllStep = AUDIO_PLL_FRACTIONAL_CHANGE_STEP,
-#endif
 };
 
 /* USB device class information */
@@ -150,95 +130,6 @@ static usb_device_class_config_list_struct_t s_audioConfigList = {
 /*******************************************************************************
  * Code
  ******************************************************************************/
-
-#if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
-uint32_t pllIsChanged = 0;
-void SCTIMER_SOF_TOGGLE_HANDLER()
-{
-    uint32_t currentSctCap = 0, pllCountPeriod = 0, pll_change = 0;
-    static int32_t pllCount = 0, pllDiff = 0;
-    static int32_t err, abs_err;
-    if (SCTIMER_GetStatusFlags(SCT0) & (1 << eventCounterU))
-    {
-        /* Clear interrupt flag.*/
-        SCTIMER_ClearStatusFlags(SCT0, (1 << eventCounterU));
-    }
-
-    if (g_audioDevice.generatorIntervalCount != 100)
-    {
-        g_audioDevice.generatorIntervalCount++;
-        return;
-    }
-    g_audioDevice.generatorIntervalCount = 1;
-    currentSctCap = SCT0->CAP[0];
-    pllCountPeriod = currentSctCap - g_audioDevice.audioPllTicksPrev;
-    g_audioDevice.audioPllTicksPrev = currentSctCap;
-    pllCount = pllCountPeriod;
-    if (g_audioDevice.attach)
-    {
-        if (abs(pllCount - AUDIO_PLL_USB1_SOF_INTERVAL_COUNT) < (AUDIO_PLL_USB1_SOF_INTERVAL_COUNT >> 7))
-        {
-            pllDiff = pllCount - g_audioDevice.audioPllTicksEma;
-            g_audioDevice.audioPllTickEmaFrac += (pllDiff % 8);
-            g_audioDevice.audioPllTicksEma += (pllDiff / 8) + g_audioDevice.audioPllTickEmaFrac / 8;
-            g_audioDevice.audioPllTickEmaFrac = (g_audioDevice.audioPllTickEmaFrac % 8);
-
-            err = g_audioDevice.audioPllTicksEma - AUDIO_PLL_USB1_SOF_INTERVAL_COUNT;
-            abs_err = abs(err);
-            if (abs_err > g_audioDevice.audioPllStep)
-            {
-                if (err > 0)
-                {
-                    g_audioDevice.curAudioPllFrac -= abs_err / g_audioDevice.audioPllStep;
-                }
-                else
-                {
-                    g_audioDevice.curAudioPllFrac += abs_err / g_audioDevice.audioPllStep;
-                }
-                pll_change = 1;
-            }
-
-            if (pll_change)
-            {
-                CLKCTL1->AUDIOPLL0NUM = g_audioDevice.curAudioPllFrac;
-                pllIsChanged = 1;
-            }
-        }
-    }
-}
-
-void SCTIMER_CaptureInit(void)
-{
-    INPUTMUX->SCT0_IN_SEL[eventCounterU] = 0xFU; /* 0xFU for USB1.*/
-    SCTIMER_GetDefaultConfig(&sctimerInfo);
-
-    /* Switch to 16-bit mode */
-    sctimerInfo.clockMode = kSCTIMER_Input_ClockMode;
-    sctimerInfo.clockSelect = kSCTIMER_Clock_On_Rise_Input_7;
-
-    /* Initialize SCTimer module */
-    SCTIMER_Init(SCT0, &sctimerInfo);
-
-    if (SCTIMER_SetupCaptureAction(SCT0, kSCTIMER_Counter_U, &captureRegisterNumber, eventCounterU) == kStatus_Fail)
-    {
-        usb_echo("SCT Setup Capture failed!\r\n");
-    }
-    SCT0->EV[0].STATE = 0x1;
-    SCT0->EV[0].CTRL = (0x01 << 10) | (0x2 << 12);
-
-    /* Enable interrupt flag for event associated with out 4, we use the interrupt to update dutycycle */
-    SCTIMER_EnableInterrupts(SCT0, (1 << eventCounterU));
-
-    /* Receive notification when event is triggered */
-    SCTIMER_SetCallback(SCT0, SCTIMER_SOF_TOGGLE_HANDLER, eventCounterU);
-
-    /* Enable at the NVIC */
-    EnableIRQ(SCT0_IRQn);
-
-    /* Start the L counter */
-    SCTIMER_StartTimer(SCT0, kSCTIMER_Counter_U);
-}
-#endif
 
 void USB_IRQHandler(void)
 {
@@ -874,10 +765,6 @@ void USB_DeviceApplicationInit(void)
     SYSMPU_Enable(SYSMPU, 0);
 #endif /* FSL_FEATURE_SOC_SYSMPU_COUNT */
 
-#if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
-    SCTIMER_CaptureInit();
-#endif
-
     if (kStatus_USB_Success != USB_DeviceClassInit(CONTROLLER_ID, &s_audioConfigList, &g_audioDevice.deviceHandle))
     {
         usb_echo("USB device failed\r\n");
@@ -973,14 +860,6 @@ void main(void)
                                  0,
                                  SwTimerCallback);
     xTimerStart(SwTimerHandle, 0);
-#endif
-
-#if defined(USB_DEVICE_AUDIO_USE_SYNC_MODE) && (USB_DEVICE_AUDIO_USE_SYNC_MODE > 0U)
-    /* attach AUDIO PLL clock to SCTimer input7. */
-    CLOCK_AttachClk(kAUDIO_PLL_to_SCT_CLK);
-    CLOCK_SetClkDiv(kCLOCK_DivSctClk, 1);
-
-    g_audioDevice.curAudioPllFrac = CLKCTL1->AUDIOPLL0NUM;
 #endif
 
     BOARD_I2S_Init();
