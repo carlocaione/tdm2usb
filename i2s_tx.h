@@ -8,6 +8,29 @@
 #ifndef __I2S_TX_H__
 #define __I2S_TX_H__ 1
 
+/**
+ *
+ *
+ *               +                           +
+ *               | I2S_TX_BUFF_SIZE_PER_INST |
+ *    CH0-CH7    +---------------------------+ +-------+ +-------+ +---+---+
+ *               | I2S_TX_BUFF_SIZE_PER_INST |                         |      +---> I2S_TX_BUFF_NUM = 4
+ *    CH8-CH15   +---------------------------+ +-------+ +-------+ +---+---+
+ *               |                           |                         |
+ *       +       |                           |                         |
+ *       |       +->   I2S_TX_BUFF_SIZE   <--+      +----------+       v
+ *       |                                          |          |
+ *       v                                          v        +----X----X----X----+
+ *                                               6 FRAMES    +----X----X----X----+
+ * I2S_INST_NUM = 2                                            U    U     U    U
+ *                                                             S    S     S    S
+ *                                                             B    B     B    B
+ *                                                             P    P     P    P
+ *                                                             K    K     K    K
+ *                                                             T    T     T    T
+ *
+ */
+
 #include "fsl_dma.h"
 
 void USB_AudioUsb2I2sBuffer(uint8_t *buffer, uint32_t size);

@@ -31,6 +31,7 @@
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
+
 #if (defined(FSL_FEATURE_SOC_SYSMPU_COUNT) && (FSL_FEATURE_SOC_SYSMPU_COUNT > 0U))
 #include "fsl_sysmpu.h"
 #endif /* FSL_FEATURE_SOC_SYSMPU_COUNT */
@@ -187,6 +188,7 @@ void USB_DeviceClockInit(void)
     /* disable usb1 host clock */
     CLOCK_DisableClock(kCLOCK_UsbhsHost);
 }
+
 void USB_DeviceIsrEnable(void)
 {
     uint8_t irqNumber;
@@ -198,12 +200,14 @@ void USB_DeviceIsrEnable(void)
     NVIC_SetPriority((IRQn_Type)irqNumber, USB_DEVICE_INTERRUPT_PRIORITY);
     EnableIRQ((IRQn_Type)irqNumber);
 }
+
 #if USB_DEVICE_CONFIG_USE_TASK
 void USB_DeviceTaskFn(void *deviceHandle)
 {
     USB_DeviceLpcIp3511TaskFunction(deviceHandle);
 }
 #endif
+
 /*!
  * @brief Audio class specific request function.
  *

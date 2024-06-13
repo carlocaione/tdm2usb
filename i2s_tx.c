@@ -78,7 +78,6 @@ USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
 static struct
 {
     volatile uint8_t vs_txNextBufIndex;
-    volatile uint8_t vs_txI2sStarted;
     volatile uint8_t vs_txUsbStarted;
     volatile uint8_t vs_txDataIsValid;
     volatile uint64_t vs_txReadDataCount;
@@ -100,7 +99,7 @@ void USB_OutPrintInfo(void)
     uint32_t diff;
 
     diff = (usb_ctx.vs_txWriteDataCount - usb_ctx.vs_txReadDataCount) / HS_ISO_OUT_ENDP_PACKET_SIZE;
-    usb_echo("[OUT/TX] diff: %ld, feedback: 0x%08x\n\r", diff, usb_ctx.vs_txFeedback);
+    usb_echo("[OUT/TX] diff: %ld, feedback: 0x%x\n\r", diff, usb_ctx.vs_txFeedback);
 }
 
 /*!
@@ -119,7 +118,7 @@ uint32_t USB_GetFeedback(uint8_t speed)
 /*!
  * @brief Logic to set the feedback data endpoint
  */
-void static inline USB_SetFeedback(void)
+static inline uint32_t USB_GetExplicitFeedback(void)
 {
     uint32_t diff;
 
@@ -130,21 +129,20 @@ void static inline USB_SetFeedback(void)
      */
     diff = (usb_ctx.vs_txWriteDataCount - usb_ctx.vs_txReadDataCount) / HS_ISO_OUT_ENDP_PACKET_SIZE;
 
+    /* We need to slow down */
     if (diff >= I2S_TX_FEEDBACK_TH_UP)
     {
-        /* We need to slow down */
-        usb_ctx.vs_txFeedback = I2S_TX_FEEDBACK_NORMAL - I2S_TX_FEEDBACK_TH_STEP;
+        return (I2S_TX_FEEDBACK_NORMAL - I2S_TX_FEEDBACK_TH_STEP);
     }
-    else if (diff <= I2S_TX_FEEDBACK_TH_DOWN)
+
+    /* We need to speed up */
+    if (diff <= I2S_TX_FEEDBACK_TH_DOWN)
     {
-        /* We need to speed up */
-        usb_ctx.vs_txFeedback = I2S_TX_FEEDBACK_NORMAL + I2S_TX_FEEDBACK_TH_STEP;
+        return (I2S_TX_FEEDBACK_NORMAL + I2S_TX_FEEDBACK_TH_STEP);
     }
-    else
-    {
-        /* We are just fine */
-        usb_ctx.vs_txFeedback = I2S_TX_FEEDBACK_NORMAL;
-    }
+
+    /* We are just fine */
+    return I2S_TX_FEEDBACK_NORMAL;
 }
 
 /*!
@@ -189,7 +187,7 @@ void USB_AudioUsb2I2sBuffer(uint8_t *usbBuffer, uint32_t size)
 
     usb_ctx.vs_txWriteDataCount += size;
 
-    USB_SetFeedback();
+    usb_ctx.vs_txFeedback = USB_GetExplicitFeedback();
 }
 
 /*!
@@ -253,8 +251,6 @@ static inline void I2S_TxCleanup(void)
  */
 void I2S_TxStop(void)
 {
-    usb_ctx.vs_txI2sStarted = 0;
-
     for (size_t inst = 0; inst < I2S_INST_NUM; inst++)
     {
         I2S_TransferAbortDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst]);
@@ -277,8 +273,6 @@ void I2S_TxStart(void)
             I2S_TxTransferSendDMA(s_i2sTxBase[inst], &s_i2sDmaTxHandle[inst], s_i2sTxTransfer[inst][buf]);
         }
     }
-
-    usb_ctx.vs_txI2sStarted = 1;
 }
 
 /*!

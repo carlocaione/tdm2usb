@@ -121,28 +121,40 @@ void USB_InPrintInfo(void)
     uint32_t diff;
 
     diff = (usb_ctx.vs_rxWriteDataCount - usb_ctx.vs_rxReadDataCount) / HS_ISO_IN_ENDP_PACKET_SIZE;
-    usb_echo("[IN/RX] diff: %ld (vs_rxFirstInt: %d, vs_rxFirstGet: %d, vs_rxNextBufIndex: %d\n\r", diff,
-             usb_ctx.vs_rxFirstInt, usb_ctx.vs_rxFirstGet, usb_ctx.vs_rxNextBufIndex);
+    usb_echo("[IN/RX] diff: %ld\n\r", diff);
 }
 
-uint32_t USB_GetFeedbackSize(void)
+/*!
+ * @brief Logic to get the correct size
+ *
+ * According to the state of the buffer, we decide how many bytes to send over to
+ * the USB host (implicit feedback)
+ */
+static inline uint32_t USB_GetImplicitFeedback(void)
 {
     uint32_t diff;
 
+    /**
+     * Logic here is based on the size of data present in the DMA buffers. That
+     * value is converted to the number of regular USB packets and decisions are
+     * taken considering and upper and lower threshold.
+     */
     diff = (usb_ctx.vs_rxWriteDataCount - usb_ctx.vs_rxReadDataCount) / HS_ISO_IN_ENDP_PACKET_SIZE;
 
+    /* We need to speed up */
     if (diff >= I2S_RX_FEEDBACK_TH_UP)
     {
         return (I2S_RX_FEEDBACK_NORMAL + I2S_RX_FEEDBACK_TH_STEP);
     }
-    else if (diff <= I2S_RX_FEEDBACK_TH_DOWN)
+
+    /* We need to slow down */
+    if (diff <= I2S_RX_FEEDBACK_TH_DOWN)
     {
         return (I2S_RX_FEEDBACK_NORMAL - I2S_RX_FEEDBACK_TH_STEP);
     }
-    else
-    {
-        return I2S_RX_FEEDBACK_NORMAL;
-    }
+
+    /* We are just fine */
+    return I2S_RX_FEEDBACK_NORMAL;
 }
 
 /*!
@@ -184,23 +196,7 @@ uint32_t USB_AudioI2s2UsbBuffer(uint8_t *usbBuffer, uint32_t size)
         usb_ctx.vs_rxFirstGet = 1;
     }
 
-    /**
-     * This is the case when we are running out of I2S data to stream out
-     * because we are sending data through USB at a faster rate than we are able
-     * to read those from I2S (for example when we kill the I2S RX side).
-     *
-     * NOTE: a corner case is when we stop the I2S data sending, for this case
-     *       we have to differentiate between the SCK being killed or not.
-     *
-     *       A) If the SCK is not being killed, we basically keep receiving zeroed
-     *          data from I2S, so we never reach the size == 0 condition.
-     *
-     *       B) If the SCK is being killed, we run out of I2S data so the size == 0
-     *          condition is interpreted as a Transfer Delimiter and this is
-     *          killing the receiving side (usually `arecord`) with an
-     *          Input/Output error.
-     */
-    size = USB_GetFeedbackSize();
+    size = USB_GetImplicitFeedback();
 
     for (size_t k = 0; k < size; k += I2S_FRAME_LEN)
     {
