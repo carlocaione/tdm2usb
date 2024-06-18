@@ -68,6 +68,8 @@ The project is written and built using VS Code, so use that instead of the regul
 
 Refer also to your UART-USB converter documentation about how to access the serial console provided by the EVK (this is usually done using `minicom` or equivalent).
 
+UART setting is 115200 8N1 with no flow control.
+
 ## Jetson AGX Orin
 On the Jetson AGX Orin, the I2S controller is configured using the `amixer` command as follows:
 
@@ -91,7 +93,7 @@ amixer -c APE cset name="I2S2 Capture Data Offset" 2
 ```
 
 # HOWTO
-To test both the communication streams (**IN** and **OUT**) we use `arecord` to record the data stream, and `speaker-test` to generate the audio stream, both running on the Jetson ORIN and/or the host PC.o
+To test both the communication streams (**IN** and **OUT**) we use `arecord` to record the data stream, and `speaker-test` to generate the audio stream, both running on the Jetson ORIN and/or the host PC.
 
 ## IN
 We are testing the following configuration:
