@@ -62,11 +62,24 @@ Connect **J5** and **J7** to the PC used for programming the board and acting as
 
 # Software setup
 ## PC host
+
+### Development environment
 Please refer to the NXP official documentation (for example the [getting started guide](https://www.nxp.com/document/guide/getting-started-with-i-mx-rt600-evaluation-kit:GS-MIMXRT685-EVK)) on how to properly setup the programming environment and all the needed software tools needed to program the evaluation board with the provided firmware.
 
 The project is written and built using VS Code, so use that instead of the regular NXP IDE (see the [MCUXpresso for Visual Studio Code documentation](https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcuxpresso-for-visual-studio-code:MCUXPRESSO-VSC)).
 
-Refer also to your UART-USB converter documentation about how to access the serial console provided by the EVK (this is usually done using `minicom` or equivalent).
+After VS code and all the related tools (toolchain, MCUXpresso plugin, etc...) are correctly setup, the project can be imported into VS code as follows:
+
+1. Select the MCUXpresso plugin tab in VS Code
+2. Click on `Import Project`
+3. Click on `Folder` and select the folder containing the code
+4. Fill in the remaining fields if needed
+5. Click on `Import`
+
+The code should now be imported and ready to be compiled and flashed on the board.
+
+### USB debug
+Refer to your UART-USB converter documentation about how to access the serial console provided by the EVK (this is usually done using `minicom` or equivalent).
 
 UART setting is 115200 8N1 with no flow control.
 
