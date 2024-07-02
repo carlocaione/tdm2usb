@@ -169,6 +169,7 @@ void USB_AudioUsb2I2sBuffer(uint8_t *usbBuffer, uint32_t size)
      */
     if ((usb_ctx.vs_txUsbStarted == 0) && (usb_ctx.vs_txNextBufIndex != (I2S_TX_BUFF_NUM / 2) + 1))
     {
+        bzero(usbBuffer, size);
         return;
     }
 
