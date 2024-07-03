@@ -12,8 +12,8 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define USB_DEVICE_VID (0x1FC9U)
-#define USB_DEVICE_PID (0x0097U)
+#define USB_DEVICE_VID (0x2833U)
+#define USB_DEVICE_PID (0x0100U)
 
 #define USB_DEVICE_SPECIFIC_BCD_VERSION (0x0200U)
 #define USB_DEVICE_DEMO_BCD_VERSION (0x0101U)
