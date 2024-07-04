@@ -64,19 +64,39 @@ Connect **J5** and **J7** to the PC used for programming the board and acting as
 ## PC host
 
 ### Development environment
-Please refer to the NXP official documentation (for example the [getting started guide](https://www.nxp.com/document/guide/getting-started-with-i-mx-rt600-evaluation-kit:GS-MIMXRT685-EVK)) on how to properly setup the programming environment and all the needed software tools needed to program the evaluation board with the provided firmware.
+For the complete documentation please refer to the [vscode-for-mcux wiki](https://github.com/nxp-mcuxpresso/vscode-for-mcux/wiki).
 
-The project is written and built using VS Code, so use that instead of the regular NXP IDE (see the [MCUXpresso for Visual Studio Code documentation](https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcuxpresso-for-visual-studio-code:MCUXPRESSO-VSC)).
+Step-by-step procedure:
+- Download Visual Studio Code for your host / architecture.
 
-After VS code and all the related tools (toolchain, MCUXpresso plugin, etc...) are correctly setup, the project can be imported into VS code as follows:
+- From the extensions marketplace download the `MCUXpresso for VS Code` extension:
+<img width="470" alt="Screenshot 2024-07-04 at 11 18 28" src="https://github.com/carlocaione/tdm2usb/assets/357758/55ce1740-fae8-4b79-a5df-277a1e5246a0">
 
-1. Select the MCUXpresso plugin tab in VS Code
-2. Click on `Import Project`
-3. Click on `Folder` and select the folder containing the code
-4. Fill in the remaining fields if needed
-5. Click on `Import`
+- From the `QUICKSTART PANEL` select `Open MCUXpresso Installer`:
+<img width="470" alt="Screenshot 2024-07-04 at 11 19 22" src="https://github.com/carlocaione/tdm2usb/assets/357758/8a415b4a-a68d-4af3-a71b-076f863f447b">
 
-The code should now be imported and ready to be compiled and flashed on the board.
+- From the installer window select everything but the `Zephyr Developer` entry and start the installation:
+<img width="651" alt="Screenshot 2024-07-04 at 11 23 45" src="https://github.com/carlocaione/tdm2usb/assets/357758/ec66e845-d9ce-4fec-b6c5-04bd637d21de">
+
+- In the `INSTALLED REPOSITORIES` window, click on `Import Repository`, fill the entries as needed and click the `Import` button:
+<img width="1109" alt="Screenshot 2024-07-04 at 11 29 07" src="https://github.com/carlocaione/tdm2usb/assets/357758/663a2c14-5d40-4e7f-aa20-1c0593af117e">
+
+- Clone the `tdm2usb` repo somewhere accessible.
+
+- In the `PROJECTS` window, click on `Import Project`, then select the `Folder` containing the project, fill the remaining entries as suggested by the extension and click on `Import`:
+<img width="1109" alt="Screenshot 2024-07-04 at 11 35 43" src="https://github.com/carlocaione/tdm2usb/assets/357758/8f50be4f-5008-43bc-a33a-43318f052af9">
+
+- To compile the project, right-click on the project name in the `PROJECTS` window and select `Pristine Build/Rebuild Selected`:
+<img width="421" alt="Screenshot 2024-07-04 at 11 38 09" src="https://github.com/carlocaione/tdm2usb/assets/357758/7da777ff-9459-4139-8a0a-2fcb15e8b49e">
+
+- To flash the code on the EVK, connect the board and click on the `Debug` button besides the project name in the `PROJECTS` window:
+<img width="361" alt="Screenshot 2024-07-04 at 11 41 04" src="https://github.com/carlocaione/tdm2usb/assets/357758/da32793d-f0cd-4d1a-892b-9631b1b2b5a2">
+
+> [!IMPORTANT]  
+> There is currently a bug in the extension for which you usually have to flash / debug TWICE (`Debug` -> `Stop` -> `Debug` -> `Run`) to be able to correctly run the code.
+
+
+
 
 ### USB debug
 Refer to your UART-USB converter documentation about how to access the serial console provided by the EVK (this is usually done using `minicom` or equivalent).
