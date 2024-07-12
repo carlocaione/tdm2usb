@@ -59,7 +59,7 @@ usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event, void *
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static uint8_t usbAudioFeedBackBuffer[4];
+USB_GLOBAL USB_RAM_ADDRESS_ALIGNMENT(USB_DATA_ALIGN_SIZE) static uint8_t usbAudioFeedBackBuffer[USB_DATA_ALIGN_SIZE_MULTIPLE(4)];
 
 extern usb_audio_device_struct_t g_audioDevice;
 extern usb_device_class_struct_t g_UsbDeviceAudioClass;

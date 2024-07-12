@@ -62,7 +62,7 @@
  *
  * Note: this only works with 32-bit channels.
  */
-#define USE_FILTER_32_DOWN (1)
+#define USE_FILTER_32_DOWN (0)
 #define FILTER_32 (0xFFFFFF00)
 
 #define I2S_RX_FEEDBACK_TH_UP (9U)
@@ -74,8 +74,8 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
-uint8_t g_usbBuffIn[USB_MAX_PACKET_IN_SIZE];
+USB_GLOBAL USB_RAM_ADDRESS_ALIGNMENT(USB_DATA_ALIGN_SIZE)
+uint8_t g_usbBuffIn[USB_DATA_ALIGN_SIZE_MULTIPLE(USB_MAX_PACKET_IN_SIZE)];
 
 /* RX */
 static I2S_Type *s_i2sRxBase[] = {
@@ -93,7 +93,8 @@ static dma_priority_t s_i2sRxDmaPrio[] = {
     I2S_RX_1_DMA_CH_PRIO,
 };
 
-SDK_ALIGN(static uint8_t s_i2sRxBuff[I2S_INST_NUM][I2S_RX_BUFF_SIZE_PER_INST * I2S_RX_BUFF_NUM], sizeof(uint32_t));
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+static uint8_t s_i2sRxBuff[I2S_INST_NUM][I2S_RX_BUFF_SIZE_PER_INST * I2S_RX_BUFF_NUM];
 
 static i2s_transfer_t s_i2sRxTransfer[I2S_INST_NUM][I2S_RX_BUFF_NUM];
 static i2s_dma_handle_t s_i2sDmaRxHandle[I2S_INST_NUM];

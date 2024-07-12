@@ -21,7 +21,7 @@
  *       |       +->   I2S_TX_BUFF_SIZE   <--+      +----------+       v
  *       |                                          |          |
  *       v                                          v        +----X----X----X----+
- *                                               6 FRAMES    +----X----X----X----+
+ *                                           6 FRAMES (+1)   +----X----X----X----+
  * I2S_INST_NUM = 2                                            U    U     U    U
  *                                                             S    S     S    S
  *                                                             B    B     B    B
