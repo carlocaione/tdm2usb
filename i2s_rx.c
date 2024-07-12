@@ -74,7 +74,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+USB_GLOBAL USB_RAM_ADDRESS_ALIGNMENT(USB_DATA_ALIGN_SIZE)
 uint8_t g_usbBuffIn[USB_MAX_PACKET_IN_SIZE];
 
 /* RX */

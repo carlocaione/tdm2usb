@@ -49,7 +49,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-USB_DMA_NONINIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+USB_GLOBAL USB_RAM_ADDRESS_ALIGNMENT(USB_DATA_ALIGN_SIZE)
 uint8_t g_usbBuffOut[USB_MAX_PACKET_OUT_SIZE];
 
 static I2S_Type *s_i2sTxBase[] = {
