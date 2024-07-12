@@ -93,7 +93,8 @@ static dma_priority_t s_i2sRxDmaPrio[] = {
     I2S_RX_1_DMA_CH_PRIO,
 };
 
-SDK_ALIGN(static uint8_t s_i2sRxBuff[I2S_INST_NUM][I2S_RX_BUFF_SIZE_PER_INST * I2S_RX_BUFF_NUM], sizeof(uint32_t));
+USB_DMA_INIT_DATA_ALIGN(USB_DATA_ALIGN_SIZE)
+static uint8_t s_i2sRxBuff[I2S_INST_NUM][I2S_RX_BUFF_SIZE_PER_INST * I2S_RX_BUFF_NUM];
 
 static i2s_transfer_t s_i2sRxTransfer[I2S_INST_NUM][I2S_RX_BUFF_NUM];
 static i2s_dma_handle_t s_i2sDmaRxHandle[I2S_INST_NUM];
